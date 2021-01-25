@@ -233,7 +233,7 @@ private class SparkShellLoggingFilter extends Filter {
    * @return decision for accept/deny log event
    */
   def decide(loggingEvent: LoggingEvent): Int = {
-    Filter.DENY
+    Filter.NEUTRAL
 //    if (Logging.sparkShellThresholdLevel == null) {
 //      Filter.NEUTRAL
 //    }

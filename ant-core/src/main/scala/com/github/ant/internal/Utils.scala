@@ -92,32 +92,32 @@ object Utils extends Logging {
   }
 
   /**
-   * Return a pair of host and port extracted from the `boltUrl`.
+   * Return a pair of host and port extracted from the `antUrl`.
    *
-   * A spark url (`bolt://host:port`) is a special URI that its scheme is `bolt` and only contains
+   * A spark url (`ant://host:port`) is a special URI that its scheme is `ant` and only contains
    * host and port.
    *
-   * @throws RpcException if boltUrl is invalid.
+   * @throws RpcException if antUrl is invalid.
    */
   @throws(classOf[RpcException])
-  def extractHostPortFromBoltUrl(boltUrl: String): (String, Int) = {
+  def extractHostPortFromAntUrl(antUrl: String): (String, Int) = {
     try {
-      val uri = new java.net.URI(boltUrl)
+      val uri = new java.net.URI(antUrl)
       val host = uri.getHost
       val port = uri.getPort
-      if (uri.getScheme != "bolt" ||
+      if (uri.getScheme != "ant" ||
         host == null ||
         port < 0 ||
         (uri.getPath != null && !uri.getPath.isEmpty) || // uri.getPath returns "" instead of null
         uri.getFragment != null ||
         uri.getQuery != null ||
         uri.getUserInfo != null) {
-        throw new RpcException("Invalid URL: " + boltUrl)
+        throw new RpcException("Invalid URL: " + antUrl)
       }
       (host, port)
     } catch {
       case e: java.net.URISyntaxException =>
-        throw new RpcException("Invalid URL: " + boltUrl, e)
+        throw new RpcException("Invalid URL: " + antUrl, e)
     }
   }
 
@@ -125,8 +125,8 @@ object Utils extends Logging {
    * Maximum number of retries when binding to a port before giving up.
    */
   def portMaxRetries(conf: RpcConf): Int = {
-    val maxRetries = conf.getOption("bolt.port.maxRetries").map(_.toInt)
-    if (conf.contains("bolt.testing")) {
+    val maxRetries = conf.getOption("ant.port.maxRetries").map(_.toInt)
+    if (conf.contains("ant.testing")) {
       // Set a higher number of retries for tests...
       maxRetries.getOrElse(100)
     } else {

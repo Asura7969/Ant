@@ -39,17 +39,16 @@ import scala.reflect.ClassTag
 import scala.util.{DynamicVariable, Failure, Success}
 import scala.util.control.NonFatal
 
-class NettyRpcEnv(
-                   val conf: RpcConf,
-                   javaSerializerInstance: JavaSerializerInstance,
-                   host: String) extends RpcEnv(conf) {
+class NettyRpcEnv(val conf: RpcConf,
+                  javaSerializerInstance: JavaSerializerInstance,
+                  host: String) extends RpcEnv(conf) {
 
   private val log = LoggerFactory.getLogger(classOf[NettyRpcEnv])
 
-  private[netty] val transportConf: TransportConf = AntTransportConf.fromSparkConf(
-    conf.set("spark.rpc.io.numConnectionsPerPeer", "1"),
+  private[netty] val transportConf: TransportConf = AntTransportConf.fromAntConf(
+    conf.set("ant.rpc.io.numConnectionsPerPeer", "1"),
     "rpc",
-    conf.getInt("spark.rpc.io.threads", 0))
+    conf.getInt("ant.rpc.io.threads", 0))
 
   private val dispatcher: Dispatcher = new Dispatcher(this)
 
@@ -70,7 +69,7 @@ class NettyRpcEnv(
   // TODO: a non-blocking TransportClientFactory.createClient in future
   private[netty] val clientConnectionExecutor = ThreadUtils.newDaemonCachedThreadPool(
     "netty-rpc-connection",
-    conf.getInt("spark.rpc.connect.threads", 64))
+    conf.getInt("ant.rpc.connect.threads", 64))
 
   @volatile private var server: TransportServer = _
 
@@ -101,7 +100,7 @@ class NettyRpcEnv(
 
   @Nullable
   override lazy val address: RpcAddress = {
-    if (server != null) RpcAddress(host, server.getPort()) else null
+    if (server != null) RpcAddress(host, server.getPort) else null
   }
 
   override def setupEndpoint(name: String, endpoint: RpcEndpoint): RpcEndpointRef = {
@@ -407,8 +406,7 @@ private[netty] class NettyRpcEndpointRef(
 /**
  * The message that is sent from the sender to the receiver.
  */
-private[netty] case class RequestMessage(
-                                          senderAddress: RpcAddress, receiver: NettyRpcEndpointRef, content: Any)
+private[netty] case class RequestMessage(senderAddress: RpcAddress, receiver: NettyRpcEndpointRef, content: Any)
 
 /**
  * A response that indicates some failure happens in the receiver side.
@@ -427,10 +425,9 @@ private[netty] case class RpcFailure(e: Throwable)
  * RpcEnv, multiple connection / disconnection events will be created for that client (albeit
  * with different `RpcAddress` information).
  */
-private[netty] class NettyRpcHandler(
-                                      dispatcher: Dispatcher,
-                                      nettyEnv: NettyRpcEnv,
-                                      streamManager: StreamManager) extends RpcHandler {
+private[netty] class NettyRpcHandler(dispatcher: Dispatcher,
+                                     nettyEnv: NettyRpcEnv,
+                                     streamManager: StreamManager) extends RpcHandler {
 
   private val log = LoggerFactory.getLogger(classOf[NettyRpcHandler])
 
@@ -444,15 +441,14 @@ private[netty] class NettyRpcHandler(
     dispatcher.postRemoteMessage(messageToDispatch, callback)
   }
 
-  override def receive(
-                        client: TransportClient,
-                        message: ByteBuffer): Unit = {
+  override def receive(client: TransportClient,
+                       message: ByteBuffer): Unit = {
     val messageToDispatch = internalReceive(client, message)
     dispatcher.postOneWayMessage(messageToDispatch)
   }
 
   private def internalReceive(client: TransportClient, message: ByteBuffer): RequestMessage = {
-    val addr = client.getChannel().remoteAddress().asInstanceOf[InetSocketAddress]
+    val addr = client.getChannel.remoteAddress().asInstanceOf[InetSocketAddress]
     assert(addr != null)
     val clientAddr = RpcAddress(addr.getHostString, addr.getPort)
     val requestMessage = nettyEnv.deserialize[RequestMessage](client, message)
@@ -492,7 +488,7 @@ private[netty] class NettyRpcHandler(
   }
 
   override def channelActive(client: TransportClient): Unit = {
-    val addr = client.getChannel().remoteAddress().asInstanceOf[InetSocketAddress]
+    val addr = client.getChannel.remoteAddress().asInstanceOf[InetSocketAddress]
     assert(addr != null)
     val clientAddr = RpcAddress(addr.getHostString, addr.getPort)
     dispatcher.postToAll(RemoteProcessConnected(clientAddr))

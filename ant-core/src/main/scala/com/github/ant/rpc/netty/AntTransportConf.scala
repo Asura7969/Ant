@@ -26,7 +26,7 @@ object AntTransportConf {
    *                       use the given number of cores, rather than all of the machine's cores.
    *                       This restriction will only occur if these properties are not already set.
    */
-  def fromSparkConf(conf: RpcConf, module: String, numUsableCores: Int = 0): TransportConf = {
+  def fromAntConf(conf: RpcConf, module: String, numUsableCores: Int = 0): TransportConf = {
     // Specify thread configuration based on our JVM's allocation of cores (rather than necessarily
     // assuming we have all the machine's cores).
     // NB: Only set if serverThreads/clientThreads not already set.

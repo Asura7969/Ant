@@ -9,7 +9,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object Client {
   def main(args: Array[String]): Unit = {
-    //    asyncCall()
+//        asyncCall()
     syncCall()
   }
 
