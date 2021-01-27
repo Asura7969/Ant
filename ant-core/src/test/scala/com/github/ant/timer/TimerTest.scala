@@ -26,7 +26,10 @@ import scala.collection.mutable.ArrayBuffer
 
 class TimerTest {
 
-  private class TestTask(override val delayMs: Long, id: Int, latch: CountDownLatch, output: ArrayBuffer[Int]) extends TimerTask {
+  private class TestTask(override val delayMs: Long,
+                         id: Int, latch: CountDownLatch,
+                         output: ArrayBuffer[Int]) extends TimerTask {
+
     private[this] val completed = new AtomicBoolean(false)
     def run(): Unit = {
       if (completed.compareAndSet(false, true)) {

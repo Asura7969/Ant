@@ -7,7 +7,7 @@ trait TimerTask extends Runnable {
 
   def cancel(): Unit = {
     synchronized {
-      if (null == timerTaskEntry) timerTaskEntry.remove
+      if (null == timerTaskEntry) timerTaskEntry.remove()
       timerTaskEntry = null
     }
   }

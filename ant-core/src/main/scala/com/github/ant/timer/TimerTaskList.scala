@@ -108,6 +108,8 @@ private[timer] class TimerTaskEntry(val timerTask: TimerTask, val expirationMs: 
   var next: TimerTaskEntry = null
   var prev: TimerTaskEntry = null
 
+  if (timerTask != null) timerTask.setTimerTaskEntry(this)
+
   def cancelled: Boolean = {
     timerTask.getTimerTaskEntry != this
   }
