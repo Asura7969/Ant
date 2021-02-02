@@ -28,14 +28,14 @@ class AntException(message: String, cause: Throwable)
  * accumulator update fails or failure in takeOrdered (user supplies an Ordering implementation
  * that can be misbehaving.
  */
-private class SparkDriverExecutionException(cause: Throwable)
+private class AntDriverExecutionException(cause: Throwable)
   extends AntException("Execution error", cause)
 
 /**
  * Exception thrown when the main user code is run as a child process (e.g. pyspark) and we want
  * the parent SparkSubmit process to exit with the same exit code.
  */
-private case class SparkUserAppException(exitCode: Int)
+private case class AntUserAppException(exitCode: Int)
   extends AntException(s"User application exited with $exitCode")
 
 /**
@@ -47,6 +47,6 @@ private case class ExecutorDeadException(message: String)
 /**
  * Exception thrown when Spark returns different result after upgrading to a new version.
  */
-private class SparkUpgradeException(version: String, message: String, cause: Throwable)
+private class AntUpgradeException(version: String, message: String, cause: Throwable)
   extends RuntimeException("You may get a different result due to the upgrading of Spark" +
     s" $version: $message", cause)
