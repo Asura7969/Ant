@@ -4,6 +4,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 import com.github.ant.internal.Logging
 import com.github.ant.network.protocol.message.TaskInfo
+import com.github.ant.util.ShutdownableThread
 
 import collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
@@ -11,13 +12,28 @@ import scala.collection.mutable.ArrayBuffer
 /**
  * woker 端具体执行类,任务的注册,删除,获取所有
  */
-class TimeService extends Logging{
-
+class TimeService(timer: Timer) extends Logging{
+  import TimeService._
+  private val timeAdvancer = new TimeAdvancer()
+  timeAdvancer.start()
   private val taskInfo = new ConcurrentHashMap[Long, TaskInfo]()
+
+  private class TimeAdvancer extends ShutdownableThread(
+    name = "worker-advancer", isInterruptible = false) {
+
+    override def doWork(): Unit = {
+      timer.advanceClock(WorkTimeoutMs)
+    }
+  }
+
+  def shutdown(): Unit = {
+    timeAdvancer.shutdown()
+  }
 
   def addTask(task: TaskInfo): Unit = {
     if (taskInfo.get(task.getTaskId) == null) {
       taskInfo.put(task.getTaskId, task)
+//      timer.add()
     } else {
       logError(s"task already exists: ${task.getTaskId}")
       // todo：上报master
@@ -69,5 +85,9 @@ class TimeService extends Logging{
 }
 
 object TimeService {
+  private val WorkTimeoutMs: Long = 200L
 
+//  def handleJob(task: TaskInfo): TimerTask = {
+//
+//  }
 }

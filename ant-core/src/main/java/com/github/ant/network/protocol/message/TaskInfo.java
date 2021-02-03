@@ -10,7 +10,7 @@ import java.util.Objects;
 /**
  * task 任务信息
  */
-public final class TaskInfo extends AbstractMessage implements RequestMessage {
+public class TaskInfo extends AbstractMessage implements RequestMessage {
     private final long taskId;
     private final String cronExpression;
 

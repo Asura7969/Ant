@@ -1,16 +1,55 @@
 package com.github.ant.cluster
 
-trait TaskParam
+import com.github.ant.network.protocol.Encoders
+import io.netty.buffer.ByteBuf
+import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper}
+import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
+import com.fasterxml.jackson.module.scala.DefaultScalaModule
+
+abstract class TaskParam extends Serializable {
+  protected val mapper:ObjectMapper = new ObjectMapper() with ScalaObjectMapper
+//  mapper.registerModule(DefaultScalaModule)
+//  mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+  def encode(buf: ByteBuf): Unit
+  def decode(buf: ByteBuf): TaskParam
+}
 // http 任务
-class HttpTask(getOrPost: String,
-               url: String, param: String,
-               header: Map[String, String],
+case class HttpTask(getOrPost: String,
+               url: String,
+               param: Option[String],
+               header: Option[Map[String, String]],
                successCode: Boolean = true,
-               timeout: Long = 10) extends TaskParam
+               timeout: Long = 10) extends TaskParam {
+  override def encode(buf: ByteBuf): Unit = {
+
+    Encoders.Strings.encode(buf, mapper.writeValueAsString(this))
+  }
+
+  override def decode(buf: ByteBuf): TaskParam = {
+    mapper.readValue(Encoders.Strings.decode(buf), classOf[HttpTask])
+  }
+}
+
 // 脚本任务：python， shell， jar
-class ScribtTask(command: String) extends TaskParam
+class ScribtTask(command: String) extends TaskParam {
+  override def encode(buf: ByteBuf): Unit = {
+    Encoders.Strings.encode(buf, mapper.writeValueAsString(this))
+  }
+
+  override def decode(buf: ByteBuf): TaskParam = {
+    mapper.readValue(Encoders.Strings.decode(buf), classOf[ScribtTask])
+  }
+}
 // soa rpc任务
-class SoaRpcTask() extends TaskParam
+class SoaRpcTask() extends TaskParam {
+  override def encode(buf: ByteBuf): Unit = {
+    Encoders.Strings.encode(buf, mapper.writeValueAsString(this))
+  }
+
+  override def decode(buf: ByteBuf): TaskParam = {
+    mapper.readValue(Encoders.Strings.decode(buf), classOf[SoaRpcTask])
+  }
+}
 
 // 任务分发 请求/响应
 case class Task(taskId: Long, cronExpression: String, task: TaskParam)

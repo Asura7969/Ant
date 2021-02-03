@@ -204,15 +204,15 @@ class JavaSerializerInstance(counterReset: Int, extraDebugInfo: Boolean, default
 
 
   class JavaSerializer(conf: RpcConf) extends Serializer with Externalizable {
-    private var counterReset = conf.getInt("spark.serializer.objectStreamReset", 100)
-    private var extraDebugInfo = conf.getBoolean("spark.serializer.extraDebugInfo", true)
+    private var counterReset = conf.getInt("ant.serializer.objectStreamReset", 100)
+    private var extraDebugInfo = conf.getBoolean("ant.serializer.extraDebugInfo", true)
 
     protected def this() = this(new RpcConf()) // For deserialization only
 
     override def newInstance(): SerializerInstance = {
       val classLoader = defaultClassLoader.getOrElse(Thread.currentThread.getContextClassLoader)
       val streamFactory: SerializationStreamFactory = classLoader
-        .loadClass(conf.get("spark.rpc.serialization.stream.factory", "com.github.ant.serializer.JavaSerializationStreamFactory"))
+        .loadClass(conf.get("ant.rpc.serialization.stream.factory", "com.github.ant.serializer.JavaSerializationStreamFactory"))
         .newInstance().asInstanceOf[SerializationStreamFactory]
       new JavaSerializerInstance(counterReset, extraDebugInfo, classLoader, streamFactory)
     }
