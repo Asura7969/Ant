@@ -3,6 +3,7 @@ package com.github.ant.timer
 import java.util.concurrent.ConcurrentHashMap
 
 import com.github.ant.internal.Logging
+import com.github.ant.job.TaskParam
 import com.github.ant.network.protocol.message.TaskInfo
 import com.github.ant.util.ShutdownableThread
 
@@ -87,7 +88,32 @@ class TimeService(timer: Timer) extends Logging{
 object TimeService {
   private val WorkTimeoutMs: Long = 200L
 
-//  def handleJob(task: TaskInfo): TimerTask = {
-//
-//  }
+  def handleJob(task: TaskInfo): TimerTask = {
+    import TaskParam.TaskType._
+    task.getTaskParam.getType match {
+      case HTTP =>
+
+      case SCRIBE =>
+
+      case SOA_RPC =>
+
+    }
+    null
+  }
+
+  // TODO:
+  private class HttpJob(override val delayMs: Long = 0) extends TimerTask {
+
+    override def run(): Unit = ???
+  }
+
+  private class ScribeJob(override val delayMs: Long = 0) extends TimerTask {
+
+    override def run(): Unit = ???
+  }
+
+  private class SoaRpcJob(override val delayMs: Long = 0) extends TimerTask {
+
+    override def run(): Unit = ???
+  }
 }

@@ -3,13 +3,18 @@ package com.github.ant.job;
 import java.util.Map;
 import java.util.Objects;
 
-public class HttpTask extends TaskParam<HttpTask>{
+public class HttpTask extends TaskParam {
     private String getOrPost;
     private String url;
     private Boolean successCode;
     private Long timeout;
     private String param;
     private Map<String,String> header;
+
+    @Override
+    public TaskType getType() {
+        return TaskType.HTTP;
+    }
 
     @Override
     public boolean equals(Object o) {
