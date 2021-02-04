@@ -10,9 +10,10 @@ import scala.collection.mutable.ArrayBuffer
 
 class TimerTest {
 
-  private class TestTask(override val delayMs: Long,
-                         id: Int, latch: CountDownLatch,
-                         output: ArrayBuffer[Int]) extends TimerTask {
+  private class TestTask(id: Int, latch: CountDownLatch,
+                         output: ArrayBuffer[Int],
+                         override var delayMs: Long,
+                         override val crontabExpress: String = "") extends TimerTask {
 
     private[this] val completed = new AtomicBoolean(false)
     def run(): Unit = {
@@ -41,7 +42,7 @@ class TimerTest {
 
     val latches = (-5 until 0).map { i =>
       val latch = new CountDownLatch(1)
-      timer.add(new TestTask(i, i, latch, output))
+      timer.add(new TestTask( i, latch, output,i,""))
       latch
     }
 
@@ -64,19 +65,19 @@ class TimerTest {
     val latches =
       (0 until 5).map { i =>
         val latch = new CountDownLatch(1)
-        tasks += new TestTask(i, i, latch, output)
+        tasks += new TestTask( i, latch, output,i,"")
         ids += i
         latch
       } ++ (10 until 100).map { i =>
         val latch = new CountDownLatch(2)
-        tasks += new TestTask(i, i, latch, output)
-        tasks += new TestTask(i, i, latch, output)
+        tasks += new TestTask( i, latch, output,i,"")
+        tasks += new TestTask( i, latch, output,i,"")
         ids += i
         ids += i
         latch
       } ++ (100 until 500).map { i =>
         val latch = new CountDownLatch(1)
-        tasks += new TestTask(i, i, latch, output)
+        tasks += new TestTask( i, latch, output,i,"")
         ids += i
         latch
       }

@@ -16,13 +16,16 @@
  */
 package com.github.ant.timer
 
+import java.util.Date
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.concurrent.{DelayQueue, Executors, ThreadFactory, TimeUnit}
 
+import com.github.ant.internal.Logging
 import com.github.ant.utils.{AntThread, Time}
+import com.github.ant.utils.CronUtils._
 
-trait Timer {
+trait Timer extends Logging{
   /**
     * Add a new task to this executor. It will be executed after the task's delay
     * (beginning from the time of submission)
@@ -90,8 +93,15 @@ class SystemTimer(executorName: String,
   private def addTimerTaskEntry(timerTaskEntry: TimerTaskEntry): Unit = {
     if (!timingWheel.add(timerTaskEntry)) {
       // Already expired or cancelled
-      if (!timerTaskEntry.cancelled)
+      if (!timerTaskEntry.cancelled) {
         taskExecutor.submit(timerTaskEntry.timerTask)
+        val nextTime = getNextExecuteTime(timerTaskEntry.timerTask.crontabExpress,
+          new Date(System.currentTimeMillis() + 2000L))
+        logInfo(s"re-submit task: $nextTime")
+
+        timerTaskEntry.timerTask.delayMs = nextTime.getTime - System.currentTimeMillis()
+        add(timerTaskEntry.timerTask)
+      }
     }
   }
 

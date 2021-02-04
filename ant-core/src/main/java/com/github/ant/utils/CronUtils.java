@@ -22,4 +22,8 @@ public class CronUtils {
             throw new IllegalArgumentException("无效的cron表达式:" + cron, e);
         }
     }
+
+    public static Date getNextExecuteTime(String cron) {
+        return getNextExecuteTime(cron, new Date());
+    }
 }

@@ -1,7 +1,8 @@
 package com.github.ant.timer
 
 trait TimerTask extends Runnable {
-  val delayMs: Long
+  var delayMs: Long
+  val crontabExpress: String
 
   private[this] var timerTaskEntry: TimerTaskEntry = null
 

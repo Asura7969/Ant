@@ -20,10 +20,10 @@ public class MessageTest {
 
         buf.clear();
 
-        ScribeTask scribtTask = new ScribeTask("java -jar ...");
-        scribtTask.encode(buf);
+        ScribeTask scribeTask = new ScribeTask("java -jar ...");
+        scribeTask.encode(buf);
         ScribeTask decodeScribt = (ScribeTask) TaskParam.decode(buf);
-        assert decodeScribt.equals(scribtTask);
+        assert decodeScribt.equals(scribeTask);
     }
 
 

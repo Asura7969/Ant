@@ -35,6 +35,10 @@ public class TaskInfo extends AbstractMessage implements RequestMessage {
         return this.taskId;
     }
 
+    public String getCronExpression() {
+        return cronExpression;
+    }
+
     @Override
     public Type type() {
         return Type.TaskInfo;
