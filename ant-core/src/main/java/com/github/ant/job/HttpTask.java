@@ -1,5 +1,6 @@
 package com.github.ant.job;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Objects;
 
@@ -10,6 +11,11 @@ public class HttpTask extends TaskParam {
     private Long timeout;
     private String param;
     private Map<String,String> header;
+
+    @Override
+    public void doJob() {
+        System.out.println(LocalDateTime.now() + " http 任务工作");
+    }
 
     @Override
     public TaskType getType() {

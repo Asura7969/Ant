@@ -3,6 +3,8 @@ package com.github.ant.timer
 import java.util.concurrent.atomic._
 import java.util.concurrent.{CountDownLatch, TimeUnit}
 
+import com.github.ant.job.TaskParam
+import com.github.ant.network.protocol.message.TaskInfo
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.{AfterEach, BeforeEach, Test}
 
@@ -13,15 +15,20 @@ class TimerTest {
   private class TestTask(id: Int, latch: CountDownLatch,
                          output: ArrayBuffer[Int],
                          override var delayMs: Long,
-                         override val crontabExpress: String = "") extends TimerTask {
+                         override val crontabExpress: String) extends TimerTask {
 
     private[this] val completed = new AtomicBoolean(false)
-    def run(): Unit = {
-      if (completed.compareAndSet(false, true)) {
-        output.synchronized { output += id }
-        latch.countDown()
+
+    override val taskInfo: TaskInfo = new TaskInfo(id, crontabExpress, new TaskParam {
+      override def doJob(): Unit = {
+        if (completed.compareAndSet(false, true)) {
+          output.synchronized { output += id }
+          latch.countDown()
+        }
       }
-    }
+
+      override def getType: TaskParam.TaskType = TaskParam.TaskType.SCRIBE
+    })
   }
 
   private[this] var timer: Timer = null

@@ -41,6 +41,8 @@ trait Timer extends Logging{
     */
   def advanceClock(timeoutMs: Long): Boolean
 
+  def remove(taskId: Long): Unit
+
   /**
     * Get the number of tasks pending execution
     * @return the number of tasks
@@ -59,12 +61,12 @@ class SystemTimer(executorName: String,
                   startMs: Long = Time.SYSTEM.hiResClockMs) extends Timer {
 
   // timeout timer
-  private[this] val taskExecutor = Executors.newFixedThreadPool(1,
+  private[this] val taskExecutor = Executors.newCachedThreadPool(
     new ThreadFactory {
-      override def newThread(r: Runnable): Thread =
+      override def newThread(r: Runnable): Thread = {
         AntThread.nonDaemon("executor-" + executorName, r)
-    }
-  )
+      }
+    })
 
   private[this] val delayQueue = new DelayQueue[TimerTaskList]()
   private[this] val taskCounter = new AtomicInteger(0)
@@ -134,4 +136,18 @@ class SystemTimer(executorName: String,
     taskExecutor.shutdown()
   }
 
+  override def remove(taskId: Long): Unit = {
+    val it = delayQueue.iterator()
+    while (it.hasNext) {
+      val list = it.next()
+      def remove(task:TimerTask): Unit = {
+        if (task.taskInfo.getTaskId == taskId) {
+          task.cancel()
+          logInfo(s"task-$taskId has canceled")
+        }
+      }
+      list.foreach(remove)
+      // todo:如果未发现有该任务,是否需要上报master节点？
+    }
+  }
 }

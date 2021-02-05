@@ -8,6 +8,8 @@ import io.netty.buffer.ByteBuf;
 public abstract class TaskParam {
     protected static ObjectMapper mapper = new ObjectMapper();
 
+    public abstract void doJob();
+
     public void encode(ByteBuf buf) throws JsonProcessingException {
         buf.writeInt(getType().id);
         System.out.println("getType id is: " + getType().id);

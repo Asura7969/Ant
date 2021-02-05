@@ -1,10 +1,16 @@
 package com.github.ant.job;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class ScribeTask extends TaskParam {
 
     private String command;
+
+    @Override
+    public void doJob() {
+        System.out.println(LocalDateTime.now() + "脚本任务工作");
+    }
 
     @Override
     public TaskType getType() {

@@ -13,7 +13,7 @@ object Client {
     syncCall()
   }
 
-  def asyncCall() = {
+  def asyncCall(): String = {
     val rpcConf = new RpcConf()
     val config = RpcEnvClientConfig(rpcConf, "hello-client")
     val rpcEnv: RpcEnv = NettyRpcEnvFactory.create(config)
@@ -26,7 +26,7 @@ object Client {
     Await.result(future, Duration.apply("30s"))
   }
 
-  def syncCall() = {
+  def syncCall(): Unit = {
     val rpcConf = new RpcConf()
     val config = RpcEnvClientConfig(rpcConf, "hello-client")
     val rpcEnv: RpcEnv = NettyRpcEnvFactory.create(config)

@@ -1,10 +1,8 @@
 package com.github.ant.timer
 
-import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
 
 import com.github.ant.internal.Logging
-import com.github.ant.job.{HttpTask, ScribeTask, SoaRpcTask, TaskParam}
 import com.github.ant.network.protocol.message.TaskInfo
 import com.github.ant.util.ShutdownableThread
 import com.github.ant.utils.CronUtils._
@@ -51,9 +49,9 @@ class TimeService(timer: Timer) extends Logging{
     }
   }
 
-  def removeTask(task: TaskInfo): Unit = {
-    taskInfo.remove(task.getTaskId)
-
+  def removeTask(taskId: Long): Unit = {
+    taskInfo.remove(taskId)
+    timer.remove(taskId)
     // todo: 上报master
   }
 
@@ -81,7 +79,7 @@ class TimeService(timer: Timer) extends Logging{
         case Some(t) =>
           if (!t.equals(task)) {
             diffTask.append(t)
-            removeTask(t)
+            removeTask(t.getTaskId)
             // 重新注册task
             addTask(task)
           }
@@ -100,52 +98,13 @@ object TimeService extends Logging {
   private val WorkTimeoutMs: Long = 200L
 
   def handleJob(task: TaskInfo): TimerTask = {
-    import TaskParam.TaskType._
     val nextTime = getNextExecuteTime(task.getCronExpression).getTime
     logInfo(s"taskId:${task.getTaskId} next execution time:$nextTime")
     val delay = nextTime - System.currentTimeMillis()
-
-    task.getTaskParam.getType match {
-      case HTTP =>
-        new HttpJob(task, delay, task.getCronExpression)
-      case SCRIBE =>
-        new ScribeJob(task, delay, task.getCronExpression)
-      case SOA_RPC =>
-        new SoaRpcJob(task, delay, task.getCronExpression)
-      case _ =>
-        logError(s"UnSupport task type: ${task.getTaskParam.getType}", new IllegalArgumentException())
-        throw new IllegalArgumentException()
-    }
-  }
-
-  // TODO:
-  private class HttpJob(task: TaskInfo,
-                        override var delayMs: Long = 0,
-                        override val crontabExpress: String = "") extends TimerTask {
-    val param = task.getTaskParam.asInstanceOf[HttpTask]
-
-    override def run(): Unit = {
-      println(s"${LocalDateTime.now()} 执行任务!")
-    }
-  }
-
-  private class ScribeJob(task: TaskInfo,
-                          override var delayMs: Long = 0,
-                          override val crontabExpress: String = "") extends TimerTask {
-    val param = task.getTaskParam.asInstanceOf[ScribeTask]
-
-    override def run(): Unit = {
-      println(s"${LocalDateTime.now()} 执行任务!")
-    }
-  }
-
-  private class SoaRpcJob(task: TaskInfo,
-                          override var delayMs: Long = 0,
-                          override val crontabExpress: String = "") extends TimerTask {
-    val param = task.getTaskParam.asInstanceOf[SoaRpcTask]
-
-    override def run(): Unit = {
-      println(s"${LocalDateTime.now()} 执行任务!")
+    new TimerTask {
+      override var delayMs: Long = delay
+      override val crontabExpress: String = task.getCronExpression
+      override val taskInfo: TaskInfo = task
     }
   }
 }
