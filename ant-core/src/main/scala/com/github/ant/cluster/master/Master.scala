@@ -28,7 +28,7 @@ object Master {
     val config = RpcEnvServerConfig(new RpcConf(), "hello-server", host, 52345)
     val rpcEnv: RpcEnv = NettyRpcEnvFactory.create(config)
     val masterEndpoint: RpcEndpoint = new MasterEndpoint(rpcEnv)
-    rpcEnv.setupEndpoint("hello-service", masterEndpoint)
+    rpcEnv.setupEndpoint("master-service", masterEndpoint)
     rpcEnv.awaitTermination()
   }
 }
@@ -41,11 +41,12 @@ class MasterEndpoint(override val rpcEnv: RpcEnv) extends RpcEndpoint with Loggi
   private var activeMaster = false
   private val workerAddress = new ConcurrentHashMap[String, RpcEndpointRef]()
   private val workerLastHeartbeat = new ConcurrentHashMap[String, Long]()
+  private val version = 0
 
   override def onStart(): Unit = {
     running = true
     // 去zk创建临时znode,
-    //    创建成功,则表示当前节点是activeMaster
+    //    创建成功,则表示当前节点是activeMaster, 并创建版本id(持久节点,当master切换时,检查版本id并自增,防止脑裂)
     //    创建失败,当前节点是standBy,监听active Master的临时节点
     //        临时节点消失,通知所有worker,master变更
     //        获取worker心跳信息
@@ -88,7 +89,8 @@ class MasterEndpoint(override val rpcEnv: RpcEnv) extends RpcEndpoint with Loggi
   }
 
   override def onStop(): Unit = {
-
+    running = false
+    stop()
   }
 
   def handleMsg(ctx: RpcCallContext): PartialFunction[Any, Unit] ={
@@ -137,21 +139,20 @@ class MasterEndpoint(override val rpcEnv: RpcEnv) extends RpcEndpoint with Loggi
           logError(s"task type:$taskType, now:${new Date()}")
           null
       }
-      if (null == taskParam) {
-        return
+      if (null != taskParam) {
+        val taskId:Long = 0L // DB.insert(...)
+        val info = new TaskInfo(taskId, cronExpression, taskParam)
+        // 分配任务在哪个worker上执行
+        val assignWorker = ""// DB.select(...)
+        workerAddress.get(assignWorker).ask[ResponseMsg](info)
       }
-      val taskId:Long = 0L // DB.insert(...)
-      val info = new TaskInfo(taskId, cronExpression, taskParam)
-      // 分配任务在哪个worker上执行
-      val assignWorker = ""// DB.select(...)
-      workerAddress.get(assignWorker).ask[ResponseMsg](info)
 
     case DeleteJob(id) =>
       // 查询 job属于哪一个worker
       val ipAndPort:String = ""//DB
     val futureStatus = workerAddress.get(ipAndPort).ask[StatusMsg](DeleteJob(id))
       futureStatus.onComplete {
-        case scala.util.Success(value) =>
+        case scala.util.Success(_) =>
           ctx.reply(Success)
         case scala.util.Failure(e) =>
           ctx.sendFailure(e)
