@@ -2,6 +2,7 @@ package com.github.ant.timer
 
 import java.util.concurrent.ConcurrentHashMap
 
+import com.github.ant.function.AntTimeServiceException
 import com.github.ant.internal.Logging
 import com.github.ant.network.protocol.message.TaskInfo
 import com.github.ant.util.ShutdownableThread
@@ -32,27 +33,35 @@ class TimeService(timer: Timer) extends Logging{
     timeAdvancer.shutdown()
   }
 
-  def addTask(task: TaskInfo): Unit = {
+  def addTask(task: TaskInfo): Option[Throwable] = {
     if (taskInfo.get(task.getTaskId) == null) {
       taskInfo.put(task.getTaskId, task)
       Try{
         handleJob(task)
       } match {
-        case Success(value) => timer.add(value)
+        case Success(value) =>
+          timer.add(value)
+          None
         case Failure(ex) =>
-          println("有异常信息,需要上报master处理")
-          // TODO: 上报 master 添加任务失败,需包含本节点信息与任务信息和异常信息
+          Option.apply(new AntTimeServiceException(ex))
       }
     } else {
-      logError(s"task already exists: ${task.getTaskId}")
-      // todo：上报master
+      val errorMsg = s"task already exists: ${task.getTaskId}"
+      logError(errorMsg)
+      Option.apply(new AntTimeServiceException(errorMsg))
     }
   }
 
-  def removeTask(taskId: Long): Unit = {
-    taskInfo.remove(taskId)
-    timer.remove(taskId)
-    // todo: 上报master
+  def removeTask(taskId: Long): Option[Throwable] = {
+    Try{
+      taskInfo.remove(taskId)
+      timer.remove(taskId)
+    } match {
+      case Success(value) =>
+        None
+      case Failure(ex) =>
+        Option.apply(new AntTimeServiceException(ex))
+    }
   }
 
   def getAllTask: Seq[TaskInfo] = {

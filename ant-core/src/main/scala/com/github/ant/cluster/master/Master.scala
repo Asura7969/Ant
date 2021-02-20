@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap
 import com.github.ant.AntConfig
 import com.github.ant.function.ExistsException
 import com.github.ant.internal.Logging
-import com.github.ant.job.{HttpTask, ScribeTask, SoaRpcTask}
+import com.github.ant.job.{HttpTask, ScribeTask, SoaRpcTask, TaskParam}
 import com.github.ant.network.protocol.message.TaskInfo
 import com.github.ant.rpc.netty.NettyRpcEnvFactory
 import com.github.ant.rpc.{RpcAddress, RpcCallContext, RpcConf, RpcEndpoint, RpcEndpointRef, RpcEnv, RpcEnvServerConfig, RpcTimeout}
@@ -93,7 +93,7 @@ class MasterEndpoint(override val rpcEnv: RpcEnv) extends RpcEndpoint with Loggi
     stop()
   }
 
-  def handleMsg(ctx: RpcCallContext): PartialFunction[Any, Unit] ={
+  def handleMsg(ctx: RpcCallContext): PartialFunction[Any, Unit] = {
     case RegisterWorker(address, port) =>
       val registered = workerAddress.keys().asScala
         .exists(ipAndPort => ipAndPort.equals(s"$address:$port"))
@@ -141,7 +141,7 @@ class MasterEndpoint(override val rpcEnv: RpcEnv) extends RpcEndpoint with Loggi
       }
       if (null != taskParam) {
         val taskId:Long = 0L // DB.insert(...)
-        val info = new TaskInfo(taskId, cronExpression, taskParam)
+        val info = AssignTaskInfo(taskId, cronExpression, taskParam)
         // 分配任务在哪个worker上执行
         val assignWorker = ""// DB.select(...)
         workerAddress.get(assignWorker).ask[ResponseMsg](info)
@@ -150,13 +150,16 @@ class MasterEndpoint(override val rpcEnv: RpcEnv) extends RpcEndpoint with Loggi
     case DeleteJob(id) =>
       // 查询 job属于哪一个worker
       val ipAndPort:String = ""//DB
-    val futureStatus = workerAddress.get(ipAndPort).ask[StatusMsg](DeleteJob(id))
+      val futureStatus = workerAddress.get(ipAndPort).ask[StatusMsg](DeleteJob(id))
       futureStatus.onComplete {
         case scala.util.Success(_) =>
           ctx.reply(Success)
         case scala.util.Failure(e) =>
           ctx.sendFailure(e)
       }
+
+    case GetTask(id) =>
+      // 获取 task 列表
   }
 
   def removeWorker(ipAndPort: String): Unit ={
@@ -187,3 +190,6 @@ class ResponseMsg
 trait StatusMsg extends ResponseMsg
 case class Success() extends StatusMsg
 case class Fail() extends StatusMsg
+
+case class AssignTaskInfo(taskId: Long, cronExpression: String, taskParam: TaskParam)
+case class GetTask(taskId: Option[Long])
