@@ -66,14 +66,10 @@ class TimeService(timer: Timer) extends Logging{
 
   def getAllTask: Seq[TaskInfo] = {
     taskInfo.values().asScala.toList
-    // todo: 是否上报master
-
   }
 
   def getTask(taskId: Long): TaskInfo = {
     taskInfo.get(taskId)
-    // todo: 是否上报master
-
   }
 
   def getTaskSize: Long = {

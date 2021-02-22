@@ -1,7 +1,7 @@
 package com.github.ant.cluster.worker
 
 import com.github.ant.AntConfig
-import com.github.ant.cluster.master.{AssignTaskInfo, DeleteJob, Fail, RegisterWorker, ResponseMsg, Success}
+import com.github.ant.cluster.master.{AssignTaskInfo, DeleteJob, Fail, GetTask, RegisterWorker, ResponseMsg, Success}
 import com.github.ant.internal.{Logging, Utils}
 import com.github.ant.network.protocol.message.TaskInfo
 import com.github.ant.rpc.netty.NettyRpcEnvFactory
@@ -88,6 +88,15 @@ class WorkerEndpoint(antConf: AntConfig,
 
     case DeleteJob(id) =>
       processThrowable(ctx, timeService.removeTask(id))
+
+    case GetTask(optionId) =>
+      val result = optionId match {
+        case Some(taskId) =>
+          timeService.getTask(taskId)
+        case None =>
+          timeService.getAllTask
+      }
+      ctx.reply(result)
 
   }
 

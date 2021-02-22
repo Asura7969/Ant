@@ -5,10 +5,10 @@ import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
 
 import com.github.ant.AntConfig
+import com.github.ant.db.DatabaseProvider
 import com.github.ant.function.ExistsException
 import com.github.ant.internal.Logging
 import com.github.ant.job.{HttpTask, ScribeTask, SoaRpcTask, TaskParam}
-import com.github.ant.network.protocol.message.TaskInfo
 import com.github.ant.rpc.netty.NettyRpcEnvFactory
 import com.github.ant.rpc.{RpcAddress, RpcCallContext, RpcConf, RpcEndpoint, RpcEndpointRef, RpcEnv, RpcEnvServerConfig, RpcTimeout}
 
@@ -24,17 +24,19 @@ class Master(antConf: AntConfig) extends Logging {
 object Master {
 
   def main(args: Array[String]): Unit = {
+    // todo:工具类中添加初始化Config对象的方法 例如:AntConfig.getWorkerConf
+    val conf = new AntConfig().loadFromSystemProperties()
     val host = "localhost"
     val config = RpcEnvServerConfig(new RpcConf(), "hello-server", host, 52345)
     val rpcEnv: RpcEnv = NettyRpcEnvFactory.create(config)
-    val masterEndpoint: RpcEndpoint = new MasterEndpoint(rpcEnv)
+    val masterEndpoint: RpcEndpoint = new MasterEndpoint(conf, rpcEnv)
     rpcEnv.setupEndpoint("master-service", masterEndpoint)
     rpcEnv.awaitTermination()
   }
 }
 
 
-class MasterEndpoint(override val rpcEnv: RpcEnv) extends RpcEndpoint with Logging {
+class MasterEndpoint(antConf: AntConfig, override val rpcEnv: RpcEnv) extends RpcEndpoint with Logging {
 
   @volatile
   private var running = false
@@ -42,6 +44,7 @@ class MasterEndpoint(override val rpcEnv: RpcEnv) extends RpcEndpoint with Loggi
   private val workerAddress = new ConcurrentHashMap[String, RpcEndpointRef]()
   private val workerLastHeartbeat = new ConcurrentHashMap[String, Long]()
   private val version = 0
+  private val db = DatabaseProvider.build[DatabaseProvider](antConf)
 
   override def onStart(): Unit = {
     running = true
@@ -54,30 +57,7 @@ class MasterEndpoint(override val rpcEnv: RpcEnv) extends RpcEndpoint with Loggi
   }
 
   override def receiveAndReply(context: RpcCallContext): PartialFunction[Any, Unit] = {
-    /**
-     * worker:
-     * 注册worker 信息:在zk上创建持久znode
-     * worker 心跳信息
-     *
-     * Job元数据信息
-     * Job运行信息
-     *
-     *
-     * client:
-     * worker信息
-     * 注册Job信息
-     *
-     *
-     *
-     * standBy master:
-     * isAlive?
-     * killSelf?
-     *
-     *
-     *
-     */
     handleMsg(context)
-
   }
 
   override def receive: PartialFunction[Any, Unit] = {
@@ -160,6 +140,15 @@ class MasterEndpoint(override val rpcEnv: RpcEnv) extends RpcEndpoint with Loggi
 
     case GetTask(id) =>
       // 获取 task 列表
+      val ipAndPort:String = ""//DB
+      val tasks = workerAddress.get(ipAndPort).ask[StatusMsg](GetTask(id))
+      tasks.onComplete {
+        case scala.util.Success(task) =>
+          ctx.reply(task)
+        case scala.util.Failure(e) =>
+          ctx.sendFailure(e)
+      }
+
   }
 
   def removeWorker(ipAndPort: String): Unit ={
@@ -191,5 +180,5 @@ trait StatusMsg extends ResponseMsg
 case class Success() extends StatusMsg
 case class Fail() extends StatusMsg
 
-case class AssignTaskInfo(taskId: Long, cronExpression: String, taskParam: TaskParam)
-case class GetTask(taskId: Option[Long])
+case class AssignTaskInfo(taskId: Long, cronExpression: String, taskParam: TaskParam) extends ResponseMsg
+case class GetTask(taskId: Option[Long]) extends ResponseMsg

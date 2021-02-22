@@ -40,6 +40,14 @@ class AntConfig extends Logging with Serializable {
     getOption(key).getOrElse(throw new NoSuchElementException(key))
   }
 
+  def getInt(key: String): Int = {
+    getOption(key).getOrElse(throw new NoSuchElementException(key)).toInt
+  }
+
+  def getInt(key: String, defaultValue: Int): Int = {
+    getOption(key).getOrElse(defaultValue).toString.toInt
+  }
+
   def get(key: String, defaultValue: String): String = {
     getOption(key).getOrElse(defaultValue)
   }
