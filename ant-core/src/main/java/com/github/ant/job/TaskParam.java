@@ -35,7 +35,7 @@ public abstract class TaskParam {
         }
     }
 
-    public abstract TaskType getType();
+    public abstract com.github.ant.job.TaskParam.TaskType getType();
 
     public enum TaskType {
         HTTP(0),

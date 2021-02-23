@@ -15,7 +15,7 @@ case class RpcConf(loadDefaults: Boolean = true) extends Cloneable with Serializ
   loadFromSystemProperties(false)
 
   def loadFromSystemProperties(silent: Boolean): RpcConf = {
-    // Load any bolt.* system properties
+    // Load any ant.* system properties
     for ((key, value) <- Utils.getSystemProperties if key.startsWith("ant.")) {
       set(key, value)
     }

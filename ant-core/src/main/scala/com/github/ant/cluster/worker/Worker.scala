@@ -1,6 +1,8 @@
 package com.github.ant.cluster.worker
 
-import com.github.ant.AntConfig
+import java.net.InetAddress
+
+import com.github.ant.{AntConfig, GlobalConfig}
 import com.github.ant.cluster.master.{AssignTaskInfo, DeleteJob, Fail, GetTask, RegisterWorker, ResponseMsg, Success}
 import com.github.ant.internal.{Logging, Utils}
 import com.github.ant.network.protocol.message.TaskInfo
@@ -13,24 +15,24 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class Worker(antConf: AntConfig) extends Logging {
 
-
-
-  val rpcConf = new RpcConf()
-  val config = RpcEnvClientConfig(rpcConf, "hello-client")
-  val rpcEnv: RpcEnv = NettyRpcEnvFactory.create(config)
-  val endPointRef: RpcEndpointRef = rpcEnv.setupEndpointRef(RpcAddress("localhost", 52345), "hello-service")
-
 }
 
 object Worker {
   def main(args: Array[String]): Unit = {
-    // todo:工具类中添加初始化Config对象的方法 例如:AntConfig.getWorkerConf
-    val conf = new AntConfig().loadFromSystemProperties()
-    val host = "localhost"
-    val config = RpcEnvServerConfig(new RpcConf(), "hello-server", host, 52345)
+    val globalConfig = new GlobalConfig(Map("ANT_CONF_DIR" -> System.getenv("ANT_CONF_DIR")))
+    val conf = globalConfig.toAntConfig
+    val workerHosts = conf.get("ant.cluster.master.host").split(",")
+    val localhost = InetAddress.getLocalHost.getHostAddress
+    val workerHost = workerHosts.find(host => host.startsWith(s"$localhost:"))
+    if (workerHost.isEmpty) {
+      throw new IllegalArgumentException(s"${workerHosts.toList} has no $localhost")
+      return
+    }
+    val port = workerHost.get.split(":")(1).toInt
+    val config = RpcEnvServerConfig(globalConfig.toRpcConfig, workerHost.get, localhost, port)
     val rpcEnv: RpcEnv = NettyRpcEnvFactory.create(config)
     val workerEndpoint: RpcEndpoint = new WorkerEndpoint(conf, rpcEnv)
-    rpcEnv.setupEndpoint("worker-service", workerEndpoint)
+    rpcEnv.setupEndpoint(workerHost.get, workerEndpoint)
     rpcEnv.awaitTermination()
   }
 }

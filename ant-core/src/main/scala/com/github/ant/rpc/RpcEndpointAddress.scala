@@ -38,9 +38,9 @@ private case class RpcEndpointAddress(rpcAddress: RpcAddress, name: String) {
   }
 
   override val toString = if (rpcAddress != null) {
-      s"spark://$name@${rpcAddress.host}:${rpcAddress.port}"
+      s"ant://$name@${rpcAddress.host}:${rpcAddress.port}"
     } else {
-      s"spark-client://$name"
+      s"ant-client://$name"
     }
 }
 
@@ -50,9 +50,9 @@ private object RpcEndpointAddress {
     new RpcEndpointAddress(host, port, name)
   }
 
-  def apply(sparkUrl: String): RpcEndpointAddress = {
+  def apply(antUrl: String): RpcEndpointAddress = {
     try {
-      val uri = new java.net.URI(sparkUrl)
+      val uri = new java.net.URI(antUrl)
       val host = uri.getHost
       val port = uri.getPort
       val name = uri.getUserInfo
@@ -63,12 +63,12 @@ private object RpcEndpointAddress {
           (uri.getPath != null && !uri.getPath.isEmpty) || // uri.getPath returns "" instead of null
           uri.getFragment != null ||
           uri.getQuery != null) {
-        throw new AntException("Invalid Spark URL: " + sparkUrl)
+        throw new AntException("Invalid Ant URL: " + antUrl)
       }
       new RpcEndpointAddress(host, port, name)
     } catch {
       case e: java.net.URISyntaxException =>
-        throw new AntException("Invalid Spark URL: " + sparkUrl, e)
+        throw new AntException("Invalid Ant URL: " + antUrl, e)
     }
   }
 }

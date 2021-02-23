@@ -1,6 +1,6 @@
 package com.github.ant.internal
 
-import java.io.IOException
+import java.io.{File, IOException}
 import java.net.BindException
 import java.util.Random
 
@@ -11,6 +11,7 @@ import io.netty.channel.unix.Errors.NativeIoException
 
 import scala.util.control.NonFatal
 import scala.collection.JavaConverters._
+import scala.collection.Map
 
 class Utils extends Logging {
   val random = new Random()
@@ -20,6 +21,15 @@ class Utils extends Logging {
 
 object Utils extends Logging {
   def getSparkClassLoader: ClassLoader = getClass.getClassLoader
+
+  def getDefaultPropertiesFile(env: Map[String, String] = sys.env): String = {
+    env.get("ANT_CONF_DIR")
+      .orElse(env.get("SPARK_HOME").map { t => s"$t${File.separator}conf" })
+      .map { t => new File(s"$t${File.separator}antConfig.properties")}
+      .filter(_.isFile)
+      .map(_.getAbsolutePath)
+      .orNull
+  }
 
   def getSystemProperties: Map[String, String] = {
     System.getProperties.stringPropertyNames().asScala
@@ -193,8 +203,8 @@ object Utils extends Logging {
           if (offset >= maxRetries) {
             val exceptionMessage = s"${e.getMessage}: Service$serviceString failed after " +
               s"$maxRetries retries (starting from $startPort)! Consider explicitly setting " +
-              s"the appropriate port for the service$serviceString (for example spark.ui.port " +
-              s"for SparkUI) to an available port or increasing spark.port.maxRetries."
+              s"the appropriate port for the service$serviceString (for example ant.ui.port " +
+              s"for SparkUI) to an available port or increasing ant.port.maxRetries."
             val exception = new BindException(exceptionMessage)
             // restore original stack trace
             exception.setStackTrace(e.getStackTrace)

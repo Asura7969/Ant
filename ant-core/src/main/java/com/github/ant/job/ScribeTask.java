@@ -13,8 +13,8 @@ public class ScribeTask extends TaskParam {
     }
 
     @Override
-    public TaskType getType() {
-        return TaskType.SCRIBE;
+    public com.github.ant.job.TaskParam.TaskType getType() {
+        return com.github.ant.job.TaskParam.TaskType.SCRIBE;
     }
 
     public ScribeTask(String command) {

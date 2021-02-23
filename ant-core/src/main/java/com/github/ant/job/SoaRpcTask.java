@@ -10,7 +10,7 @@ public class SoaRpcTask extends TaskParam {
     }
 
     @Override
-    public TaskType getType() {
-        return TaskType.SOA_RPC;
+    public com.github.ant.job.TaskParam.TaskType getType() {
+        return com.github.ant.job.TaskParam.TaskType.SOA_RPC;
     }
 }

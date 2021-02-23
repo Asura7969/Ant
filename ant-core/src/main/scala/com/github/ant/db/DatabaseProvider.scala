@@ -9,7 +9,7 @@ import com.github.ant.internal.Logging
 
 import collection.JavaConverters._
 
-abstract class DatabaseProvider(conf: AntConfig) extends Logging {
+class DatabaseProvider(conf: AntConfig) extends Logging {
   protected val url: String = conf.get("ant.database.url")//"jdbc:mysql://localhost/mysql"
   protected val username: String = conf.get("ant.database.username", "root")
   protected val password: String = conf.get("ant.database.password", "root")
@@ -23,15 +23,25 @@ abstract class DatabaseProvider(conf: AntConfig) extends Logging {
 
   initPool()
 
-  abstract def initPool(): Unit
+  def initPool(): Unit = {
+    throw new RuntimeException("")
+  }
 
-  abstract def createConnection(): Connection
+  def createConnection(): Connection = {
+    throw new RuntimeException("")
+  }
 
-  abstract def getConnection: Connection
+  def getConnection: Connection = {
+    throw new RuntimeException("")
+  }
 
-  abstract def releaseIdleCon(): Unit
+  def releaseIdleCon(): Unit = {
+    throw new RuntimeException("")
+  }
 
-  def returnConnection(con: Connection): Unit
+  def returnConnection(con: Connection): Unit = {
+    throw new RuntimeException("")
+  }
 
   def close(): Unit = {
     pool.asScala.foreach(_.close())
@@ -40,7 +50,8 @@ abstract class DatabaseProvider(conf: AntConfig) extends Logging {
 }
 
 object DatabaseProvider {
-  def build[DatabaseProvider](conf: AntConfig): DatabaseProvider = {
+
+  def build(conf: AntConfig): DatabaseProvider = {
     new DatabaseProvider(conf)
   }
 }

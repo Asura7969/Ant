@@ -7,7 +7,7 @@ import com.github.ant.internal.{Logging, Utils}
 class AntConfig extends Logging with Serializable {
   private val settings = new ConcurrentHashMap[String, String]()
 
-  private[spark] def loadFromSystemProperties(): AntConfig = {
+  def loadFromSystemProperties(): AntConfig = {
     // Load any ant.* system properties
     for ((key, value) <- Utils.getSystemProperties if key.startsWith("ant.")) {
       set(key, value)

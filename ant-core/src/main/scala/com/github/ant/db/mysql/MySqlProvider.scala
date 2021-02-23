@@ -9,7 +9,7 @@ import com.github.ant.db.DatabaseProvider
  * mysql链接提供者
  * @param conf 数据库连接配置
  */
-class MySqlProvider(conf: AntConfig) extends DatabaseProvider(conf){
+class MySqlProvider(conf: AntConfig) extends DatabaseProvider(conf) {
 
   import MySqlProvider._
 

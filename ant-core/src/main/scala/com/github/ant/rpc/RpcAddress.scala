@@ -27,8 +27,8 @@ case class RpcAddress(host: String, port: Int) {
 
   def hostPort: String = host + ":" + port
 
-  /** Returns a string in the form of "spark://host:port". */
-  def toSparkURL: String = "spark://" + hostPort
+  /** Returns a string in the form of "ant://host:port". */
+  def toAntURL: String = "ant://" + hostPort
 
   override def toString: String = hostPort
 }
@@ -42,9 +42,9 @@ object RpcAddress {
     RpcAddress(uriObj.getHost, uriObj.getPort)
   }
 
-  /** Returns the [[RpcAddress]] encoded in the form of "spark://host:port" */
-  def fromSparkURL(sparkUrl: String): RpcAddress = {
-    val (host, port) = Utils.extractHostPortFromSparkUrl(sparkUrl)
+  /** Returns the [[RpcAddress]] encoded in the form of "ant://host:port" */
+  def fromSparkURL(antUrl: String): RpcAddress = {
+    val (host, port) = Utils.extractHostPortFromSparkUrl(antUrl)
     RpcAddress(host, port)
   }
 }

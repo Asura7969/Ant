@@ -28,8 +28,8 @@ object RpcUtils {
    * Retrieve a `RpcEndpointRef` which is located in the driver via its name.
    */
   def makeDriverRef(name: String, conf: RpcConf, rpcEnv: RpcEnv): RpcEndpointRef = {
-    val driverHost: String = conf.get("ant.driver.host", "localhost")
-    val driverPort: Int = conf.getInt("ant.driver.port", 7077)
+    val driverHost: String = conf.get("ant.cluster.master.host", "localhost")
+    val driverPort: Int = conf.getInt("ant.cluster.master.port", 7077)
     Utils.checkHost(driverHost, "Expected hostname")
     rpcEnv.setupEndpointRef(RpcAddress(driverHost, driverPort), name)
   }
@@ -44,14 +44,14 @@ object RpcUtils {
     conf.getTimeAsMs("ant.rpc.retry.wait", "3s")
   }
 
-  /** Returns the default Bolt timeout to use for RPC ask operations. */
+  /** Returns the default Ant timeout to use for RPC ask operations. */
   def askRpcTimeout(conf: RpcConf): RpcTimeout = {
-    RpcTimeout(conf, Seq("ant.rpc.askTimeout", "ant.network.timeout"), "120s")
+    RpcTimeout(conf, Seq("ant.rpc.askTimeout", "ant.rpc.network.timeout"), "120s")
   }
 
-  /** Returns the default Bolt timeout to use for RPC remote endpoint lookup. */
+  /** Returns the default Ant timeout to use for RPC remote endpoint lookup. */
   def lookupRpcTimeout(conf: RpcConf): RpcTimeout = {
-    RpcTimeout(conf, Seq("ant.rpc.lookupTimeout", "ant.network.timeout"), "120s")
+    RpcTimeout(conf, Seq("ant.rpc.lookupTimeout", "ant.rpc.network.timeout"), "120s")
   }
 
   private val MAX_MESSAGE_SIZE_IN_MB = Int.MaxValue / 1024 / 1024

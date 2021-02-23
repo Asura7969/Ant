@@ -1,10 +1,11 @@
 package com.github.ant.cluster.master
 
+import java.net.InetAddress
 import java.util
 import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
 
-import com.github.ant.AntConfig
+import com.github.ant.{AntConfig, GlobalConfig}
 import com.github.ant.db.DatabaseProvider
 import com.github.ant.function.ExistsException
 import com.github.ant.internal.Logging
@@ -17,20 +18,26 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class Master(antConf: AntConfig) extends Logging {
 
-
 }
 
 
 object Master {
 
   def main(args: Array[String]): Unit = {
-    // todo:工具类中添加初始化Config对象的方法 例如:AntConfig.getWorkerConf
-    val conf = new AntConfig().loadFromSystemProperties()
-    val host = "localhost"
-    val config = RpcEnvServerConfig(new RpcConf(), "hello-server", host, 52345)
+    val globalConfig = new GlobalConfig(Map("ANT_CONF_DIR" -> System.getenv("ANT_CONF_DIR")))
+    val conf = globalConfig.toAntConfig
+    val masterHosts = conf.get("ant.cluster.master.host").split(",")
+    val localhost = InetAddress.getLocalHost.getHostAddress
+    val masterHost = masterHosts.find(host => host.startsWith(s"$localhost:"))
+    if (masterHost.isEmpty) {
+      throw new IllegalArgumentException(s"${masterHosts.toList} has no $localhost")
+      return
+    }
+    val port = masterHost.get.split(":")(1).toInt
+    val config = RpcEnvServerConfig(globalConfig.toRpcConfig, masterHost.get, localhost, port)
     val rpcEnv: RpcEnv = NettyRpcEnvFactory.create(config)
     val masterEndpoint: RpcEndpoint = new MasterEndpoint(conf, rpcEnv)
-    rpcEnv.setupEndpoint("master-service", masterEndpoint)
+    rpcEnv.setupEndpoint(masterHost.get, masterEndpoint)
     rpcEnv.awaitTermination()
   }
 }
@@ -44,7 +51,7 @@ class MasterEndpoint(antConf: AntConfig, override val rpcEnv: RpcEnv) extends Rp
   private val workerAddress = new ConcurrentHashMap[String, RpcEndpointRef]()
   private val workerLastHeartbeat = new ConcurrentHashMap[String, Long]()
   private val version = 0
-  private val db = DatabaseProvider.build[DatabaseProvider](antConf)
+  private val db = DatabaseProvider.build(antConf)
 
   override def onStart(): Unit = {
     running = true

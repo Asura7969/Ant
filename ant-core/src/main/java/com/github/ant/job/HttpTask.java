@@ -18,8 +18,8 @@ public class HttpTask extends TaskParam {
     }
 
     @Override
-    public TaskType getType() {
-        return TaskType.HTTP;
+    public com.github.ant.job.TaskParam.TaskType getType() {
+        return com.github.ant.job.TaskParam.TaskType.HTTP;
     }
 
     @Override
