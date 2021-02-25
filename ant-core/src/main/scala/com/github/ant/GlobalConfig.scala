@@ -5,6 +5,7 @@ import java.util.Properties
 
 import com.github.ant.internal.Utils
 import com.github.ant.rpc.RpcConf
+import com.github.ant.utils.zk.CuratorUtils
 
 import scala.collection.JavaConverters._
 
@@ -28,6 +29,16 @@ class GlobalConfig(env: Map[String, String]) {
     val conf = new RpcConf()
     loadFile.asScala.foreach(kv => if(kv._1.startsWith("ant.rpc.")) conf.set(kv._1,kv._2))
     conf
+  }
+
+  def toCuratorConfig: CuratorUtils.CuratorConfig = {
+    val allConfig = loadFile
+    new CuratorUtils.CuratorConfig()
+      .setConnectAddr(allConfig.getProperty("ant.zookeeper.server"))
+      .setConnectionTimeout(allConfig.getProperty("ant.zookeeper.timeout").toInt)
+      .setMaxRetries(allConfig.getProperty("ant.zookeeper.max.retries").toInt)
+      .setBaseSleepTimeMs(allConfig.getProperty("ant.zookeeper.sleep.ms").toInt)
+      .setSessionTimeout(allConfig.getProperty("ant.zookeeper.session.timeout").toInt)
   }
 }
 

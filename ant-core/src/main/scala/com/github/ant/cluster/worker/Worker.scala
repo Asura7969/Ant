@@ -3,7 +3,7 @@ package com.github.ant.cluster.worker
 import java.net.InetAddress
 
 import com.github.ant.{AntConfig, GlobalConfig}
-import com.github.ant.cluster.master.{AssignTaskInfo, DeleteJob, Fail, GetTask, RegisterWorker, ResponseMsg, Success}
+import com.github.ant.cluster.master.{AssignTaskInfo, ChangeMaster, DeleteJob, Fail, GetTask, RegisterWorker, ResponseMsg, Success}
 import com.github.ant.internal.{Logging, Utils}
 import com.github.ant.network.protocol.message.TaskInfo
 import com.github.ant.rpc.netty.NettyRpcEnvFactory
@@ -48,7 +48,7 @@ class WorkerEndpoint(antConf: AntConfig,
       antConf.get("worker.timer.wheel.size", "60").toInt)
   )
   // todo:去zk获取 active master信息
-  val master: RpcEndpointRef = rpcEnv.setupEndpointRef(
+  var master: RpcEndpointRef = rpcEnv.setupEndpointRef(
     RpcAddress("localhost", 52345), "master-service")
 
   override def onStart(): Unit = {
@@ -100,6 +100,10 @@ class WorkerEndpoint(antConf: AntConfig,
       }
       ctx.reply(result)
 
+    case ChangeMaster() =>
+      // todo: 去zk获取当前存活的master
+      master = rpcEnv.setupEndpointRef(
+        RpcAddress("localhost", 52345), "master-service")
   }
 
 

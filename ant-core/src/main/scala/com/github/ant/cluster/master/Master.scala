@@ -31,7 +31,6 @@ object Master {
     val masterHost = masterHosts.find(host => host.startsWith(s"$localhost:"))
     if (masterHost.isEmpty) {
       throw new IllegalArgumentException(s"${masterHosts.toList} has no $localhost")
-      return
     }
     val port = masterHost.get.split(":")(1).toInt
     val config = RpcEnvServerConfig(globalConfig.toRpcConfig, masterHost.get, localhost, port)
@@ -156,6 +155,9 @@ class MasterEndpoint(antConf: AntConfig, override val rpcEnv: RpcEnv) extends Rp
           ctx.sendFailure(e)
       }
 
+    case ChangeMaster() =>
+      workerAddress.values().asScala.foreach(_.ask(ChangeMaster))
+
   }
 
   def removeWorker(ipAndPort: String): Unit ={
@@ -177,6 +179,7 @@ case class AddNewJob(cronExpression: String, runCommand: String,
                      params:Map[String,String], fileId: Option[Long],
                      taskType: Int) extends RequestMsg
 case class DeleteJob(id: Long) extends RequestMsg
+case class ChangeMaster() extends RequestMsg
 
 
 case class ReportJob()
