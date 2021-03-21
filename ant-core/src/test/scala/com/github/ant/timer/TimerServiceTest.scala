@@ -2,12 +2,11 @@ package com.github.ant.timer
 
 import java.util.Date
 import java.util.concurrent.{Callable, CountDownLatch, Executors, Future, ThreadFactory, TimeUnit}
-
 import com.github.ant.job.{HttpTask, TaskParam}
 import com.github.ant.network.protocol.message.TaskInfo
 import com.github.ant.utils.CronUtils
+import org.junit.Test
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
 
 import scala.collection.mutable.ArrayBuffer
 
