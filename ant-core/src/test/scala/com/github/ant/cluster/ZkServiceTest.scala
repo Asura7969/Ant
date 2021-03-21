@@ -44,8 +44,6 @@ class ZkServiceTest {
 
   def createClient(): CuratorFramework ={
 
-
-
     val retryPolicy = new ExponentialBackoffRetry(conf.getBaseSleepTimeMs, conf.getMaxRetries)
     val client = CuratorFrameworkFactory.builder.connectString(conf.getConnectAddr)
       .connectionTimeoutMs(conf.getConnectionTimeout).sessionTimeoutMs(conf.getSessionTimeout)
