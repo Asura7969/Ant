@@ -37,8 +37,6 @@ class ZkServiceTest {
     one.stop()
     Thread.sleep(1000)
     assert(two.getVersion() == 2)
-
-
   }
 
 
