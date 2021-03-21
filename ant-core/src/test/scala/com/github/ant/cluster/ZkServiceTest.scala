@@ -72,7 +72,6 @@ class ZkServiceTest {
             .forPath(masterPath, "0".getBytes())
           println("节点创建成功!")
         }
-
         println("获取节点数据!" + new String(zkClient1.getData.forPath(masterPath)))
 
       }
