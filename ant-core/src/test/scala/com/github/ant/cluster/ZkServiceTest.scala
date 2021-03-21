@@ -26,7 +26,6 @@ class ZkServiceTest {
     .setMaxRetries(3)
     .setSessionTimeout(5000).build()
 
-
   @Test
   def zkServiceTest(): Unit = {
     val one = ZkService("ONE", conf)
