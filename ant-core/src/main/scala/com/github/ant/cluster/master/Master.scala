@@ -5,6 +5,7 @@ import java.util
 import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
 
+import com.github.ant.cluster.{ZkService, ZkServiceEndpoint}
 import com.github.ant.{AntConfig, GlobalConfig}
 import com.github.ant.db.DatabaseProvider
 import com.github.ant.function.ExistsException
@@ -36,7 +37,7 @@ object Master {
     val config = RpcEnvServerConfig(globalConfig.toRpcConfig, masterHost.get, localhost, port)
     val rpcEnv: RpcEnv = NettyRpcEnvFactory.create(config)
     val masterEndpoint: RpcEndpoint = new MasterEndpoint(conf, rpcEnv)
-    rpcEnv.setupEndpoint(masterHost.get, masterEndpoint)
+    rpcEnv.setupEndpoint(rpcEnv.address.hostPort, masterEndpoint)
     rpcEnv.awaitTermination()
   }
 }
@@ -51,8 +52,11 @@ class MasterEndpoint(antConf: AntConfig, override val rpcEnv: RpcEnv) extends Rp
   private val workerLastHeartbeat = new ConcurrentHashMap[String, Long]()
   private val version = 0
   private val db = DatabaseProvider.build(antConf)
+  private var zkService:ZkServiceEndpoint = _
 
   override def onStart(): Unit = {
+    zkService = ZkServiceEndpoint(s"${rpcEnv.address.hostPort}", antConf.toCuratorConfig)
+    if (zkService.getActiveOrStandByFlag) activeMaster = true
     running = true
     // 去zk创建临时znode,
     //    创建成功,则表示当前节点是activeMaster, 并创建版本id(持久节点,当master切换时,检查版本id并自增,防止脑裂)
@@ -180,6 +184,10 @@ case class AddNewJob(cronExpression: String, runCommand: String,
                      taskType: Int) extends RequestMsg
 case class DeleteJob(id: Long) extends RequestMsg
 case class ChangeMaster() extends RequestMsg
+
+case class BecameActive() extends RequestMsg
+case class BecameStandBy() extends RequestMsg
+
 
 
 case class ReportJob()

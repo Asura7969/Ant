@@ -3,6 +3,7 @@ package com.github.ant
 import java.util.concurrent.ConcurrentHashMap
 
 import com.github.ant.internal.{Logging, Utils}
+import com.github.ant.utils.zk.CuratorUtils
 
 class AntConfig extends Logging with Serializable {
   private val settings = new ConcurrentHashMap[String, String]()
@@ -54,5 +55,14 @@ class AntConfig extends Logging with Serializable {
 
   def getOption(key: String): Option[String] = {
     Option(settings.get(key))
+  }
+
+  def toCuratorConfig: CuratorUtils.CuratorConfig = {
+    new CuratorUtils.CuratorConfig()
+      .setConnectAddr(settings.get("ant.zookeeper.server"))
+      .setConnectionTimeout(settings.get("ant.zookeeper.timeout").toInt)
+      .setMaxRetries(settings.get("ant.zookeeper.max.retries").toInt)
+      .setBaseSleepTimeMs(settings.get("ant.zookeeper.sleep.ms").toInt)
+      .setSessionTimeout(settings.get("ant.zookeeper.session.timeout").toInt)
   }
 }
