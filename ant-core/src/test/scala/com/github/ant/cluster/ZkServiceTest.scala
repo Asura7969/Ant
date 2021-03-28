@@ -28,15 +28,15 @@ class ZkServiceTest {
 
   @Test
   def zkServiceTest(): Unit = {
-    val one = ZkService("ONE", conf)
+    val one = ZkServiceEndpoint("ONE", conf)
     Thread.sleep(1000)
-    val two = ZkService("TWO", conf)
+    val two = ZkServiceEndpoint("TWO", conf)
 
-    assert(one.getVersion() == 1)
-    assert(two.getVersion() == 1)
+    assert(one.getVersion == 1)
+    assert(two.getVersion == 1)
     one.stop()
     Thread.sleep(1000)
-    assert(two.getVersion() == 2)
+    assert(two.getVersion == 2)
   }
 
 

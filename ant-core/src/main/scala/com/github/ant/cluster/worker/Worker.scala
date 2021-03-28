@@ -100,10 +100,11 @@ class WorkerEndpoint(antConf: AntConfig,
       }
       ctx.reply(result)
 
-    case ChangeMaster() =>
+    case ChangeMaster(address, port) =>
       // todo: 去zk获取当前存活的master
       master = rpcEnv.setupEndpointRef(
-        RpcAddress("localhost", 52345), "master-service")
+        RpcAddress(address, port), "master-service")
+      ctx.reply(Success())
   }
 
 
@@ -113,7 +114,7 @@ object WorkerEndpoint {
   private def processThrowable(ctx: RpcCallContext, option: Option[Throwable]): Unit = {
     option match {
       case Some(ex) => ctx.sendFailure(ex)
-      case None => ctx.reply(Success)
+      case None => ctx.reply(Success())
     }
   }
 }

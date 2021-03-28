@@ -40,7 +40,7 @@ class ZkServiceEndpoint(conf: CuratorUtils.CuratorConfig, override val rpcEnv: R
     } catch {
       case e:Exception =>
         stop()
-        log.info("ZkService created failed!")
+        log.error("ZkService created failed!")
         throw e;
     }
   }
