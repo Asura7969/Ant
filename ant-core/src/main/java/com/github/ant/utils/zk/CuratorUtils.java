@@ -108,6 +108,7 @@ public class CuratorUtils {
         private int CONNECTION_TIMEOUT;
         private int MAX_RETRIES;
         private int BASE_SLEEP_TIME_MS;
+        private String LOCAL_MASTER_URL;
 
         public CuratorConfig setConnectAddr(String connectAddr) {
             this.CONNECT_ADDR = connectAddr;
@@ -150,12 +151,18 @@ public class CuratorUtils {
             return this;
         }
 
+        public String getLocalMasterUrl() {
+            return LOCAL_MASTER_URL;
+        }
+
+        public CuratorConfig setLocalMasterUrl(String localMasterUrl) {
+            this.LOCAL_MASTER_URL = localMasterUrl;
+            return this;
+        }
+
         public int getBaseSleepTimeMs() {
             return this.BASE_SLEEP_TIME_MS;
         }
 
-        public CuratorConfig build() {
-            return this;
-        }
     }
 }

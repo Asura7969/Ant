@@ -43,8 +43,8 @@ object RpcAddress {
   }
 
   /** Returns the [[RpcAddress]] encoded in the form of "ant://host:port" */
-  def fromSparkURL(antUrl: String): RpcAddress = {
-    val (host, port) = Utils.extractHostPortFromSparkUrl(antUrl)
+  def fromAntURL(antUrl: String): RpcAddress = {
+    val (host, port) = Utils.extractHostPortFromAntUrl(antUrl)
     RpcAddress(host, port)
   }
 }

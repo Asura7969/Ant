@@ -24,13 +24,13 @@ class ZkServiceTest {
     .setBaseSleepTimeMs(5000)
     .setConnectAddr("localhost:2181")
     .setMaxRetries(3)
-    .setSessionTimeout(5000).build()
+    .setSessionTimeout(5000)
 
   @Test
   def zkServiceTest(): Unit = {
-    val one = ZkServiceEndpoint("ONE", conf)
+    val one = ZkServiceEndpoint(conf, null)
     Thread.sleep(1000)
-    val two = ZkServiceEndpoint("TWO", conf)
+    val two = ZkServiceEndpoint(conf, null)
 
     assert(one.getVersion == 1)
     assert(two.getVersion == 1)

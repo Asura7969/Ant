@@ -4,7 +4,8 @@ import java.net.InetAddress
 import java.util
 import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
-import com.github.ant.cluster.{ZkService, ZkServiceEndpoint}
+
+import com.github.ant.cluster.ZkServiceEndpoint
 import com.github.ant.{AntConfig, GlobalConfig}
 import com.github.ant.db.DatabaseProvider
 import com.github.ant.function.ExistsException
@@ -12,8 +13,11 @@ import com.github.ant.internal.Logging
 import com.github.ant.job.{HttpTask, ScribeTask, SoaRpcTask, TaskParam}
 import com.github.ant.rpc.netty.NettyRpcEnvFactory
 import com.github.ant.rpc.{RpcAddress, RpcCallContext, RpcConf, RpcEndpoint, RpcEndpointRef, RpcEnv, RpcEnvServerConfig, RpcTimeout}
-
 import java.time.Instant
+
+import com.github.ant.internal.Utils._
+import com.github.ant.utils.ParameterTool
+
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -25,16 +29,14 @@ class Master(antConf: AntConfig) extends Logging {
 object Master {
 
   def main(args: Array[String]): Unit = {
+    // todo: 动态参数
+    val tool = ParameterTool.fromArgs(args)
     val globalConfig = new GlobalConfig(Map("ANT_CONF_DIR" -> System.getenv("ANT_CONF_DIR")))
     val conf = globalConfig.toAntConfig
-    val masterHosts = conf.get("ant.cluster.master.host").split(",")
-    val localhost = InetAddress.getLocalHost.getHostAddress
-    val masterHost = masterHosts.find(host => host.startsWith(s"$localhost:"))
-    if (masterHost.isEmpty) {
-      throw new IllegalArgumentException(s"${masterHosts.toList} has no $localhost")
-    }
-    val port = masterHost.get.split(":")(1).toInt
-    val config = RpcEnvServerConfig(globalConfig.toRpcConfig, masterHost.get, localhost, port)
+    val (host, port) = conf.getLocalServerInfo("ant.cluster.master.address")
+
+    val localhost = getLocalAddress
+    val config = RpcEnvServerConfig(globalConfig.toRpcConfig, s"$host:$port", localhost, port)
     val rpcEnv: RpcEnv = NettyRpcEnvFactory.create(config)
     val masterEndpoint: RpcEndpoint = new MasterEndpoint(conf, rpcEnv)
     rpcEnv.setupEndpoint(rpcEnv.address.hostPort, masterEndpoint)
@@ -52,11 +54,11 @@ class MasterEndpoint(antConf: AntConfig, override val rpcEnv: RpcEnv) extends Rp
   private val workerLastHeartbeat = new ConcurrentHashMap[String, Long]()
   private val version = 0
   private val db = DatabaseProvider.build(antConf)
-  private var zkService:ZkServiceEndpoint = _
+//  private var zkService:ZkServiceEndpoint = _
 
   override def onStart(): Unit = {
-    zkService = ZkServiceEndpoint(s"${rpcEnv.address.hostPort}", antConf.toCuratorConfig)
-    if (zkService.getActiveOrStandByFlag) activeMaster = true
+//    zkService = ZkServiceEndpoint(s"${rpcEnv.address.hostPort}", antConf.toCuratorConfig)
+//    if (zkService.getActiveOrStandByFlag) activeMaster = true
     running = true
     // 去zk创建临时znode,
     //    创建成功,则表示当前节点是activeMaster, 并创建版本id(持久节点,当master切换时,检查版本id并自增,防止脑裂)

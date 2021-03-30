@@ -17,7 +17,9 @@
 
 package com.github.ant.util
 
+import com.github.ant.function.NotFoundException
 import com.github.ant.internal.Utils
+import com.github.ant.internal.Utils.getLocalAddress
 import com.github.ant.rpc.{RpcAddress, RpcConf, RpcEndpointRef, RpcEnv, RpcTimeout}
 
 import scala.concurrent.duration._
@@ -27,11 +29,17 @@ object RpcUtils {
   /**
    * Retrieve a `RpcEndpointRef` which is located in the driver via its name.
    */
-  def makeDriverRef(name: String, conf: RpcConf, rpcEnv: RpcEnv): RpcEndpointRef = {
-    val driverHost: String = conf.get("ant.cluster.master.host", "localhost")
-    val driverPort: Int = conf.getInt("ant.cluster.master.port", 7077)
-    Utils.checkHost(driverHost, "Expected hostname")
-    rpcEnv.setupEndpointRef(RpcAddress(driverHost, driverPort), name)
+  def makeMasterRef(name: String, conf: RpcConf, rpcEnv: RpcEnv): RpcEndpointRef = {
+    val driverAddress: String = conf.get("ant.cluster.master.address",
+      s"$getLocalAddress:7077")
+
+    driverAddress.split(",").find(address => address.startsWith(s"$getLocalAddress:")) match {
+      case Some(address) =>
+        val addressString = address.split(":")
+        rpcEnv.setupEndpointRef(RpcAddress(addressString(0), addressString(1).toInt), name)
+
+      case _ => throw new NotFoundException(s"Not found address like $getLocalAddress:%")
+    }
   }
 
   /** Returns the configured number of times to retry connecting */

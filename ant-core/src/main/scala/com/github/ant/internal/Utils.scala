@@ -1,10 +1,10 @@
 package com.github.ant.internal
 
 import java.io.{File, IOException}
-import java.net.BindException
+import java.net.{BindException, InetAddress}
 import java.util.Random
 
-import com.github.ant.rpc.{RpcConf, RpcException}
+import com.github.ant.rpc.{RpcConf, RpcEndpointRef, RpcException}
 import com.github.ant.util.AntException
 import com.github.ant.utils.JavaUtils
 import io.netty.channel.unix.Errors.NativeIoException
@@ -20,7 +20,7 @@ class Utils extends Logging {
 }
 
 object Utils extends Logging {
-  def getSparkClassLoader: ClassLoader = getClass.getClassLoader
+  def getAntClassLoader: ClassLoader = getClass.getClassLoader
 
   def getDefaultPropertiesFile(env: Map[String, String] = sys.env): String = {
     env.get("ANT_CONF_DIR")
@@ -101,10 +101,14 @@ object Utils extends Logging {
     assert(host.indexOf(':') == -1, message)
   }
 
+  def getLocalAddress: String = {
+    InetAddress.getLocalHost.getHostAddress
+  }
+
   /**
    * Return a pair of host and port extracted from the `antUrl`.
    *
-   * A spark url (`ant://host:port`) is a special URI that its scheme is `ant` and only contains
+   * A ant url (`ant://host:port`) is a special URI that its scheme is `ant` and only contains
    * host and port.
    *
    * @throws RpcException if antUrl is invalid.
@@ -171,7 +175,7 @@ object Utils extends Logging {
    * @param startPort    The initial port to start the service on.
    * @param startService Function to start service on a given port.
    *                     This is expected to throw java.net.BindException on port collision.
-   * @param conf         A SparkConf used to get the maximum number of retries when binding to a port.
+   * @param conf         A AntConf used to get the maximum number of retries when binding to a port.
    * @param serviceName  Name of the service.
    * @return (service: T, port: Int)
    */
@@ -285,37 +289,15 @@ object Utils extends Logging {
     }
   }
 
-  @throws(classOf[AntException])
-  def extractHostPortFromSparkUrl(sparkUrl: String): (String, Int) = {
-    try {
-      val uri = new java.net.URI(sparkUrl)
-      val host = uri.getHost
-      val port = uri.getPort
-      if (uri.getScheme != "spark" ||
-        host == null ||
-        port < 0 ||
-        (uri.getPath != null && !uri.getPath.isEmpty) || // uri.getPath returns "" instead of null
-        uri.getFragment != null ||
-        uri.getQuery != null ||
-        uri.getUserInfo != null) {
-        throw new AntException("Invalid master URL: " + sparkUrl)
-      }
-      (host, port)
-    } catch {
-      case e: java.net.URISyntaxException =>
-        throw new AntException("Invalid master URL: " + sparkUrl, e)
-    }
-  }
-
-  def getContextOrSparkClassLoader: ClassLoader =
-    Option(Thread.currentThread().getContextClassLoader).getOrElse(getSparkClassLoader)
+  def getContextOrAntClassLoader: ClassLoader =
+    Option(Thread.currentThread().getContextClassLoader).getOrElse(getAntClassLoader)
 
   def classForName[C](
                        className: String,
                        initialize: Boolean = true,
                        noSparkClassLoader: Boolean = false): Class[C] = {
     if (!noSparkClassLoader) {
-      Class.forName(className, initialize, getContextOrSparkClassLoader).asInstanceOf[Class[C]]
+      Class.forName(className, initialize, getContextOrAntClassLoader).asInstanceOf[Class[C]]
     } else {
       Class.forName(className, initialize, Thread.currentThread().getContextClassLoader).
         asInstanceOf[Class[C]]

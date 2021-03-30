@@ -1,14 +1,15 @@
 package com.github.ant.cluster.worker
 
-import java.net.InetAddress
-
-import com.github.ant.{AntConfig, GlobalConfig}
+import com.github.ant.{AntConfig, DynamicParameters, GlobalConfig}
+import com.github.ant.DynamicParameters._
 import com.github.ant.cluster.master.{AssignTaskInfo, ChangeMaster, DeleteJob, Fail, GetTask, RegisterWorker, ResponseMsg, Success}
+import com.github.ant.internal.Utils._
 import com.github.ant.internal.{Logging, Utils}
 import com.github.ant.network.protocol.message.TaskInfo
 import com.github.ant.rpc.netty.NettyRpcEnvFactory
 import com.github.ant.rpc.{RpcAddress, RpcCallContext, RpcConf, RpcEndpoint, RpcEndpointRef, RpcEnv, RpcEnvClientConfig, RpcEnvServerConfig}
 import com.github.ant.timer.{SystemTimer, TimeService}
+import com.github.ant.utils.ParameterTool
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -19,20 +20,17 @@ class Worker(antConf: AntConfig) extends Logging {
 
 object Worker {
   def main(args: Array[String]): Unit = {
+    // todo: 动态参数
+    val tool = ParameterTool.fromArgs(args)
     val globalConfig = new GlobalConfig(Map("ANT_CONF_DIR" -> System.getenv("ANT_CONF_DIR")))
     val conf = globalConfig.toAntConfig
-    val workerHosts = conf.get("ant.cluster.master.host").split(",")
-    val localhost = InetAddress.getLocalHost.getHostAddress
-    val workerHost = workerHosts.find(host => host.startsWith(s"$localhost:"))
-    if (workerHost.isEmpty) {
-      throw new IllegalArgumentException(s"${workerHosts.toList} has no $localhost")
-      return
-    }
-    val port = workerHost.get.split(":")(1).toInt
-    val config = RpcEnvServerConfig(globalConfig.toRpcConfig, workerHost.get, localhost, port)
+    val (host, port) = conf.getLocalServerInfo("ant.cluster.worker.address")
+    val localhost = getLocalAddress
+    val config = RpcEnvServerConfig(globalConfig.toRpcConfig, s"$host:$port", localhost, port)
     val rpcEnv: RpcEnv = NettyRpcEnvFactory.create(config)
+    conf.set(ACTIVE_MASTER_URL, args(0))
     val workerEndpoint: RpcEndpoint = new WorkerEndpoint(conf, rpcEnv)
-    rpcEnv.setupEndpoint(workerHost.get, workerEndpoint)
+    rpcEnv.setupEndpoint(rpcEnv.address.hostPort, workerEndpoint)
     rpcEnv.awaitTermination()
   }
 }
@@ -47,9 +45,13 @@ class WorkerEndpoint(antConf: AntConfig,
       antConf.get("worker.timer.tick.ms", "200").toLong,
       antConf.get("worker.timer.wheel.size", "60").toInt)
   )
-  // todo:去zk获取 active master信息
-  var master: RpcEndpointRef = rpcEnv.setupEndpointRef(
-    RpcAddress("localhost", 52345), "master-service")
+
+  var master: RpcEndpointRef = {
+    val masterUrl = antConf.get(ACTIVE_MASTER_URL)
+    val (host, port) = Utils.extractHostPortFromAntUrl(masterUrl)
+    rpcEnv.setupEndpointRef(
+      RpcAddress.fromAntURL(masterUrl), s"$host:$port")
+  }
 
   override def onStart(): Unit = {
     // start 之后向master注册本节点信息
@@ -83,7 +85,7 @@ class WorkerEndpoint(antConf: AntConfig,
 
   def handleMsg(ctx: RpcCallContext): PartialFunction[Any, Unit] = {
     case Success =>
-      // do nothing
+    // do nothing
     case AssignTaskInfo(taskId, cronExpression, taskParam) =>
       processThrowable(ctx,
         timeService.addTask(new TaskInfo(taskId, cronExpression, taskParam)))

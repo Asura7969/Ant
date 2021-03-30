@@ -1,7 +1,5 @@
 package com.github.ant.cluster
 
-import java.net.InetAddress
-
 import com.github.ant.internal.Logging
 import com.github.ant.utils.zk.CuratorUtils
 import com.github.ant.utils.zk.CuratorUtils.{addNodeCache, createClient, createEphemeral, getData, isNodeExistSync}
@@ -11,8 +9,10 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import com.github.ant.GlobalConfig
 import com.github.ant.cluster.master.{BecameActive, BecameStandBy, RequestMsg, StatusMsg, Success}
+import com.github.ant.internal.Utils._
 import com.github.ant.rpc.netty.NettyRpcEnvFactory
 import com.github.ant.rpc.{RpcAddress, RpcCallContext, RpcEndpoint, RpcEndpointRef, RpcEnv, RpcEnvServerConfig}
+import com.github.ant.utils.ParameterTool
 
 /**
  * @author asura7969
@@ -28,8 +28,11 @@ class ZkServiceEndpoint(conf: CuratorUtils.CuratorConfig, override val rpcEnv: R
   @volatile private var activeOrStandBy = false
   private val version = new AtomicInteger(0)
 
-  var localMaster: RpcEndpointRef = rpcEnv.setupEndpointRef(
-    RpcAddress("localhost", 52345), "master-service")
+  var localMaster: RpcEndpointRef = {
+    val (host, port) = extractHostPortFromAntUrl(conf.getLocalMasterUrl)
+    rpcEnv.setupEndpointRef(
+      RpcAddress.fromAntURL(conf.getLocalMasterUrl), s"$host:$port")
+  }
 
   override def onStart(): Unit = {
     try {
@@ -125,19 +128,19 @@ class ZkServiceEndpoint(conf: CuratorUtils.CuratorConfig, override val rpcEnv: R
 
 object ZkServiceEndpoint {
 
-  def apply(name:String, conf: CuratorUtils.CuratorConfig): ZkServiceEndpoint = new ZkServiceEndpoint(name, conf)
+  def apply(conf: CuratorUtils.CuratorConfig, rpcEnv: RpcEnv): ZkServiceEndpoint = new ZkServiceEndpoint(conf, rpcEnv)
 
   def main(args: Array[String]): Unit = {
+    // todo: 动态参数
+    val tool = ParameterTool.fromArgs(args)
     val globalConfig = new GlobalConfig(Map("ANT_CONF_DIR" -> System.getenv("ANT_CONF_DIR")))
     val conf = globalConfig.toAntConfig
-    val masterHosts = conf.get("ant.cluster.master.host").split(",")
-    val localhost = InetAddress.getLocalHost.getHostAddress
-    val masterHost = masterHosts.find(host => host.startsWith(s"$localhost:"))
-    val zkServicePort = conf.get("ant.cluster.zkService.port").toInt
+    val (host, port) = conf.getLocalServerInfo("ant.cluster.zkService.address")
+    val localhost = getLocalAddress
     val rpcConfig = globalConfig.toRpcConfig
-    val config = RpcEnvServerConfig(rpcConfig, s"$localhost:$zkServicePort", localhost, zkServicePort)
+    val config = RpcEnvServerConfig(rpcConfig, s"$host:$port", localhost, port)
     val rpcEnv: RpcEnv = NettyRpcEnvFactory.create(config)
-    val zkServiceEndpoint: RpcEndpoint = new ZkServiceEndpoint(conf.toCuratorConfig, rpcEnv)
+    val zkServiceEndpoint: RpcEndpoint = ZkServiceEndpoint(conf.toCuratorConfig, rpcEnv)
     rpcEnv.setupEndpoint(rpcEnv.address.hostPort, zkServiceEndpoint)
     rpcEnv.awaitTermination()
   }

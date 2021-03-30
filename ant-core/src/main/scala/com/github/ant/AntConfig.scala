@@ -2,6 +2,8 @@ package com.github.ant
 
 import java.util.concurrent.ConcurrentHashMap
 
+import com.github.ant.function.NotFoundException
+import com.github.ant.internal.Utils.getLocalAddress
 import com.github.ant.internal.{Logging, Utils}
 import com.github.ant.utils.zk.CuratorUtils
 
@@ -41,6 +43,34 @@ class AntConfig extends Logging with Serializable {
     getOption(key).getOrElse(throw new NoSuchElementException(key))
   }
 
+  /**
+   * @param key ant.cluster.worker.address
+   *            ant.cluster.master.address
+   *            ant.cluster.zkService.address
+   * @return （address, port）
+   */
+  def getLocalServerInfo(key: String): (String, Int) = {
+    get(key).split(",")
+      .find(address => address.startsWith(s"$getLocalAddress:")) match {
+      case Some(str) =>
+        val addressStr = str.split(":")
+        (addressStr(0), addressStr(1).toInt)
+      case None =>
+        throw new NotFoundException(s"Not found address like $getLocalAddress:%")
+    }
+  }
+
+  def getLocalMasterUrl: String = {
+    get("ant.cluster.master.address").split(",")
+      .find(address => address.startsWith(s"$getLocalAddress:")) match {
+      case Some(str) =>
+        val addressStr = str.split(":")
+        s"ant://${addressStr(0)}:${addressStr(1).toInt}"
+      case None =>
+        throw new NotFoundException(s"Not found address like $getLocalAddress:%")
+    }
+  }
+
   def getInt(key: String): Int = {
     getOption(key).getOrElse(throw new NoSuchElementException(key)).toInt
   }
@@ -64,5 +94,6 @@ class AntConfig extends Logging with Serializable {
       .setMaxRetries(settings.get("ant.zookeeper.max.retries").toInt)
       .setBaseSleepTimeMs(settings.get("ant.zookeeper.sleep.ms").toInt)
       .setSessionTimeout(settings.get("ant.zookeeper.session.timeout").toInt)
+      .setLocalMasterUrl(getLocalMasterUrl)
   }
 }
