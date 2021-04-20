@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.ant.mybatis.mapper.TaskRuntimeMapper">
+  <resultMap id="BaseResultMap" type="com.github.ant.mybatis.model.TaskRuntime">
+    <!--@mbg.generated-->
+    <!--@Table task_runtime-->
+    <id column="runtime_id" jdbcType="BIGINT" property="runtimeId" />
+    <result column="runtime_task_id" jdbcType="BIGINT" property="runtimeTaskId" />
+    <result column="runtime_address" jdbcType="VARCHAR" property="runtimeAddress" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    runtime_id, runtime_task_id, runtime_address
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    <!--@mbg.generated-->
+    select 
+    <include refid="Base_Column_List" />
+    from task_runtime
+    where runtime_id = #{runtimeId,jdbcType=BIGINT}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    <!--@mbg.generated-->
+    delete from task_runtime
+    where runtime_id = #{runtimeId,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" keyColumn="runtime_id" keyProperty="runtimeId" parameterType="com.github.ant.mybatis.model.TaskRuntime" useGeneratedKeys="true">
+    <!--@mbg.generated-->
+    insert into task_runtime (runtime_task_id, runtime_address)
+    values (#{runtimeTaskId,jdbcType=BIGINT}, #{runtimeAddress,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" keyColumn="runtime_id" keyProperty="runtimeId" parameterType="com.github.ant.mybatis.model.TaskRuntime" useGeneratedKeys="true">
+    <!--@mbg.generated-->
+    insert into task_runtime
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="runtimeTaskId != null">
+        runtime_task_id,
+      </if>
+      <if test="runtimeAddress != null">
+        runtime_address,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="runtimeTaskId != null">
+        #{runtimeTaskId,jdbcType=BIGINT},
+      </if>
+      <if test="runtimeAddress != null">
+        #{runtimeAddress,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.github.ant.mybatis.model.TaskRuntime">
+    <!--@mbg.generated-->
+    update task_runtime
+    <set>
+      <if test="runtimeTaskId != null">
+        runtime_task_id = #{runtimeTaskId,jdbcType=BIGINT},
+      </if>
+      <if test="runtimeAddress != null">
+        runtime_address = #{runtimeAddress,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where runtime_id = #{runtimeId,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.github.ant.mybatis.model.TaskRuntime">
+    <!--@mbg.generated-->
+    update task_runtime
+    set runtime_task_id = #{runtimeTaskId,jdbcType=BIGINT},
+      runtime_address = #{runtimeAddress,jdbcType=VARCHAR}
+    where runtime_id = #{runtimeId,jdbcType=BIGINT}
+  </update>
+
+  <select id="selectAddressAndTaskId" resultMap="BaseResultMap">
+    select runtime_address, runtime_task_id from task_runtime
+  </select>
+</mapper>

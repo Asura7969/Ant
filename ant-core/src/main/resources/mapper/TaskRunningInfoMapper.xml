@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.ant.mybatis.mapper.TaskRunningInfoMapper">
+  <resultMap id="BaseResultMap" type="com.github.ant.mybatis.model.TaskRunningInfo">
+    <!--@mbg.generated-->
+    <!--@Table task_running_info-->
+    <id column="task_running_info_id" jdbcType="BIGINT" property="taskRunningInfoId" />
+    <result column="task_running_info_status" jdbcType="CHAR" property="taskRunningInfoStatus" />
+    <result column="task_running_info_error" jdbcType="BLOB" property="taskRunningInfoError" />
+    <result column="task_running_info_duration" jdbcType="BIGINT" property="taskRunningInfoDuration" />
+    <result column="task_running_info_create_time" jdbcType="TIMESTAMP" property="taskRunningInfoCreateTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    task_running_info_id, task_running_info_status, task_running_info_error, task_running_info_duration, 
+    task_running_info_create_time
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    <!--@mbg.generated-->
+    select 
+    <include refid="Base_Column_List" />
+    from task_running_info
+    where task_running_info_id = #{taskRunningInfoId,jdbcType=BIGINT}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    <!--@mbg.generated-->
+    delete from task_running_info
+    where task_running_info_id = #{taskRunningInfoId,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" keyColumn="task_running_info_id" keyProperty="taskRunningInfoId" parameterType="com.github.ant.mybatis.model.TaskRunningInfo" useGeneratedKeys="true">
+    <!--@mbg.generated-->
+    insert into task_running_info (task_running_info_status, task_running_info_error, 
+      task_running_info_duration, task_running_info_create_time
+      )
+    values (#{taskRunningInfoStatus,jdbcType=CHAR}, #{taskRunningInfoError,jdbcType=BLOB}, 
+      #{taskRunningInfoDuration,jdbcType=BIGINT}, #{taskRunningInfoCreateTime,jdbcType=TIMESTAMP}
+      )
+  </insert>
+  <insert id="insertSelective" keyColumn="task_running_info_id" keyProperty="taskRunningInfoId" parameterType="com.github.ant.mybatis.model.TaskRunningInfo" useGeneratedKeys="true">
+    <!--@mbg.generated-->
+    insert into task_running_info
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="taskRunningInfoStatus != null">
+        task_running_info_status,
+      </if>
+      <if test="taskRunningInfoError != null">
+        task_running_info_error,
+      </if>
+      <if test="taskRunningInfoDuration != null">
+        task_running_info_duration,
+      </if>
+      <if test="taskRunningInfoCreateTime != null">
+        task_running_info_create_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="taskRunningInfoStatus != null">
+        #{taskRunningInfoStatus,jdbcType=CHAR},
+      </if>
+      <if test="taskRunningInfoError != null">
+        #{taskRunningInfoError,jdbcType=BLOB},
+      </if>
+      <if test="taskRunningInfoDuration != null">
+        #{taskRunningInfoDuration,jdbcType=BIGINT},
+      </if>
+      <if test="taskRunningInfoCreateTime != null">
+        #{taskRunningInfoCreateTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.github.ant.mybatis.model.TaskRunningInfo">
+    <!--@mbg.generated-->
+    update task_running_info
+    <set>
+      <if test="taskRunningInfoStatus != null">
+        task_running_info_status = #{taskRunningInfoStatus,jdbcType=CHAR},
+      </if>
+      <if test="taskRunningInfoError != null">
+        task_running_info_error = #{taskRunningInfoError,jdbcType=BLOB},
+      </if>
+      <if test="taskRunningInfoDuration != null">
+        task_running_info_duration = #{taskRunningInfoDuration,jdbcType=BIGINT},
+      </if>
+      <if test="taskRunningInfoCreateTime != null">
+        task_running_info_create_time = #{taskRunningInfoCreateTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where task_running_info_id = #{taskRunningInfoId,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.github.ant.mybatis.model.TaskRunningInfo">
+    <!--@mbg.generated-->
+    update task_running_info
+    set task_running_info_status = #{taskRunningInfoStatus,jdbcType=CHAR},
+      task_running_info_error = #{taskRunningInfoError,jdbcType=BLOB},
+      task_running_info_duration = #{taskRunningInfoDuration,jdbcType=BIGINT},
+      task_running_info_create_time = #{taskRunningInfoCreateTime,jdbcType=TIMESTAMP}
+    where task_running_info_id = #{taskRunningInfoId,jdbcType=BIGINT}
+  </update>
+</mapper>

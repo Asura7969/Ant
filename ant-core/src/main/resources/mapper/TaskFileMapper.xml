@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.ant.mybatis.mapper.TaskFileMapper">
+  <resultMap id="BaseResultMap" type="com.github.ant.mybatis.model.TaskFile">
+    <!--@mbg.generated-->
+    <!--@Table task_file-->
+    <id column="file_id" jdbcType="BIGINT" property="fileId" />
+    <result column="file_type" jdbcType="VARCHAR" property="fileType" />
+    <result column="file_content" jdbcType="LONGVARCHAR" property="fileContent" />
+    <result column="file_create_time" jdbcType="TIMESTAMP" property="fileCreateTime" />
+    <result column="file_update_time" jdbcType="TIMESTAMP" property="fileUpdateTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    file_id, file_type, file_content, file_create_time, file_update_time
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    <!--@mbg.generated-->
+    select 
+    <include refid="Base_Column_List" />
+    from task_file
+    where file_id = #{fileId,jdbcType=BIGINT}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    <!--@mbg.generated-->
+    delete from task_file
+    where file_id = #{fileId,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" keyColumn="file_id" keyProperty="fileId" parameterType="com.github.ant.mybatis.model.TaskFile" useGeneratedKeys="true">
+    <!--@mbg.generated-->
+    insert into task_file (file_type, file_content, file_create_time, 
+      file_update_time)
+    values (#{fileType,jdbcType=VARCHAR}, #{fileContent,jdbcType=LONGVARCHAR}, #{fileCreateTime,jdbcType=TIMESTAMP}, 
+      #{fileUpdateTime,jdbcType=TIMESTAMP})
+  </insert>
+  <insert id="insertSelective" keyColumn="file_id" keyProperty="fileId" parameterType="com.github.ant.mybatis.model.TaskFile" useGeneratedKeys="true">
+    <!--@mbg.generated-->
+    insert into task_file
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="fileType != null">
+        file_type,
+      </if>
+      <if test="fileContent != null">
+        file_content,
+      </if>
+      <if test="fileCreateTime != null">
+        file_create_time,
+      </if>
+      <if test="fileUpdateTime != null">
+        file_update_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="fileType != null">
+        #{fileType,jdbcType=VARCHAR},
+      </if>
+      <if test="fileContent != null">
+        #{fileContent,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="fileCreateTime != null">
+        #{fileCreateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="fileUpdateTime != null">
+        #{fileUpdateTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.github.ant.mybatis.model.TaskFile">
+    <!--@mbg.generated-->
+    update task_file
+    <set>
+      <if test="fileType != null">
+        file_type = #{fileType,jdbcType=VARCHAR},
+      </if>
+      <if test="fileContent != null">
+        file_content = #{fileContent,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="fileCreateTime != null">
+        file_create_time = #{fileCreateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="fileUpdateTime != null">
+        file_update_time = #{fileUpdateTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where file_id = #{fileId,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.github.ant.mybatis.model.TaskFile">
+    <!--@mbg.generated-->
+    update task_file
+    set file_type = #{fileType,jdbcType=VARCHAR},
+      file_content = #{fileContent,jdbcType=LONGVARCHAR},
+      file_create_time = #{fileCreateTime,jdbcType=TIMESTAMP},
+      file_update_time = #{fileUpdateTime,jdbcType=TIMESTAMP}
+    where file_id = #{fileId,jdbcType=BIGINT}
+  </update>
+</mapper>

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.ant.mybatis.mapper.TaskMapper">
+  <resultMap id="BaseResultMap" type="com.github.ant.mybatis.model.Task">
+    <!--@mbg.generated-->
+    <!--@Table task-->
+    <id column="task_id" jdbcType="BIGINT" property="taskId" />
+    <result column="task_name" jdbcType="VARCHAR" property="taskName" />
+    <result column="task_status" jdbcType="CHAR" property="taskStatus" />
+    <result column="task_create_time" jdbcType="TIMESTAMP" property="taskCreateTime" />
+    <result column="task_update_time" jdbcType="TIMESTAMP" property="taskUpdateTime" />
+    <result column="task_param_id" jdbcType="BIGINT" property="taskParamId" />
+    <result column="task_file_id" jdbcType="INTEGER" property="taskFileId" />
+    <result column="task_command" jdbcType="LONGVARCHAR" property="taskCommand" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    task_id, task_name, task_status, task_create_time, task_update_time, task_param_id, 
+    task_file_id, task_command
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    <!--@mbg.generated-->
+    select 
+    <include refid="Base_Column_List" />
+    from task
+    where task_id = #{taskId,jdbcType=BIGINT}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    <!--@mbg.generated-->
+    delete from task
+    where task_id = #{taskId,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" keyColumn="task_id" keyProperty="taskId" parameterType="com.github.ant.mybatis.model.Task" useGeneratedKeys="true">
+    <!--@mbg.generated-->
+    insert into task (task_name, task_status, task_create_time, 
+      task_update_time, task_param_id, task_file_id, 
+      task_command)
+    values (#{taskName,jdbcType=VARCHAR}, #{taskStatus,jdbcType=CHAR}, #{taskCreateTime,jdbcType=TIMESTAMP}, 
+      #{taskUpdateTime,jdbcType=TIMESTAMP}, #{taskParamId,jdbcType=BIGINT}, #{taskFileId,jdbcType=BIGINT},
+      #{taskCommand,jdbcType=LONGVARCHAR})
+  </insert>
+  <insert id="insertSelective" keyColumn="task_id" keyProperty="taskId" parameterType="com.github.ant.mybatis.model.Task" useGeneratedKeys="true">
+    <!--@mbg.generated-->
+    insert into task
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="taskName != null">
+        task_name,
+      </if>
+      <if test="taskStatus != null">
+        task_status,
+      </if>
+      <if test="taskCreateTime != null">
+        task_create_time,
+      </if>
+      <if test="taskUpdateTime != null">
+        task_update_time,
+      </if>
+      <if test="taskParamId != null">
+        task_param_id,
+      </if>
+      <if test="taskFileId != null">
+        task_file_id,
+      </if>
+      <if test="taskCommand != null">
+        task_command,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="taskName != null">
+        #{taskName,jdbcType=VARCHAR},
+      </if>
+      <if test="taskStatus != null">
+        #{taskStatus,jdbcType=CHAR},
+      </if>
+      <if test="taskCreateTime != null">
+        #{taskCreateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="taskUpdateTime != null">
+        #{taskUpdateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="taskParamId != null">
+        #{taskParamId,jdbcType=BIGINT},
+      </if>
+      <if test="taskFileId != null">
+        #{taskFileId,jdbcType=BIGINT},
+      </if>
+      <if test="taskCommand != null">
+        #{taskCommand,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.github.ant.mybatis.model.Task">
+    <!--@mbg.generated-->
+    update task
+    <set>
+      <if test="taskName != null">
+        task_name = #{taskName,jdbcType=VARCHAR},
+      </if>
+      <if test="taskStatus != null">
+        task_status = #{taskStatus,jdbcType=CHAR},
+      </if>
+      <if test="taskCreateTime != null">
+        task_create_time = #{taskCreateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="taskUpdateTime != null">
+        task_update_time = #{taskUpdateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="taskParamId != null">
+        task_param_id = #{taskParamId,jdbcType=BIGINT},
+      </if>
+      <if test="taskFileId != null">
+        task_file_id = #{taskFileId,jdbcType=BIGINT},
+      </if>
+      <if test="taskCommand != null">
+        task_command = #{taskCommand,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where task_id = #{taskId,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.github.ant.mybatis.model.Task">
+    <!--@mbg.generated-->
+    update task
+    set task_name = #{taskName,jdbcType=VARCHAR},
+      task_status = #{taskStatus,jdbcType=CHAR},
+      task_create_time = #{taskCreateTime,jdbcType=TIMESTAMP},
+      task_update_time = #{taskUpdateTime,jdbcType=TIMESTAMP},
+      task_param_id = #{taskParamId,jdbcType=BIGINT},
+      task_file_id = #{taskFileId,jdbcType=BIGINT},
+      task_command = #{taskCommand,jdbcType=LONGVARCHAR}
+    where task_id = #{taskId,jdbcType=BIGINT}
+  </update>
+
+  <select id="getTaskListByAddress" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from task
+    where task_id in (
+        select runtime_task_id
+        from task_runtime
+        where runtime_address = #{address,jdbcType=VARCHAR}
+    )
+  </select>
+</mapper>

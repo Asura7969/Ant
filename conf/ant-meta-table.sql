@@ -44,10 +44,10 @@ CREATE TABLE IF NOT EXISTS ant.task_running_info(
     `task_running_info_create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
 );
 
-create index idx_ant_task_task_id on task (task_id) comment 'taskId索引';
-create index idx_ant_runtime_runtime_id on task_runtime (runtime_id) comment 'runtimeId索引';
-create index idx_ant_task_param_param_id on task_param (param_id) comment 'paramId索引';
-create index idx_ant_task_file_file_id on task_file (file_id) comment 'fileId索引';
-create index idx_ant_task_running_info_task_running_info_id on task_running_info (task_running_info_id) comment 'fileId索引';
+create index idx_ant_task_task_id on ant.task (task_id) comment 'taskId索引';
+create index idx_ant_runtime_runtime_id on ant.task_runtime (runtime_id) comment 'runtimeId索引';
+create index idx_ant_task_param_param_id on ant.task_param (param_id) comment 'paramId索引';
+create index idx_ant_task_file_file_id on ant.task_file (file_id) comment 'fileId索引';
+create index idx_ant_task_running_info_task_running_info_id on ant.task_running_info (task_running_info_id) comment 'fileId索引';
 
 -- 集群信息暂时不考虑存储

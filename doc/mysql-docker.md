@@ -1,7 +1,5 @@
 ### 本地环境搭建
 
-
-
 ```
 docker pull mysql:5.7
 

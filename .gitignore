@@ -2,3 +2,8 @@
 /ant-core/target/
 
 *.iml
+
+target
+
+.idea
+
