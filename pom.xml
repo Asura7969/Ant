@@ -28,12 +28,14 @@
         <jackson.version>2.12.0</jackson.version>
         <curator.version>4.2.0</curator.version>
         <mysql.version>8.0.22</mysql.version>
+        <mybatis.version>3.5.1</mybatis.version>
         <zookeeper.version>3.4.6</zookeeper.version>
         <de.ruedigermoeller.version>2.50</de.ruedigermoeller.version>
 
         <junit.version>4.13.2</junit.version>
         <junit-jupiter.version>5.7.0</junit-jupiter.version>
         <java.version>1.8</java.version>
+        <scala.binary.version>2.11</scala.binary.version>
     </properties>
 
     <dependencyManagement>
@@ -170,7 +172,17 @@
                 <artifactId>mysql-connector-java</artifactId>
                 <version>${mysql.version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>org.mybatis</groupId>
+                <artifactId>mybatis</artifactId>
+                <version>${mybatis.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest_${scala.binary.version}</artifactId>
+                <version>3.0.3</version>
+                <scope>test</scope>
+            </dependency>
 
         </dependencies>
     </dependencyManagement>

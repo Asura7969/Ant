@@ -1,11 +1,8 @@
 package com.github.ant.cluster.master
 
-import java.net.InetAddress
-import java.util
 import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
 
-import com.github.ant.cluster.ZkServiceEndpoint
 import com.github.ant.{AntConfig, GlobalConfig}
 import com.github.ant.db.DatabaseProvider
 import com.github.ant.function.ExistsException
@@ -15,6 +12,7 @@ import com.github.ant.rpc.netty.NettyRpcEnvFactory
 import com.github.ant.rpc.{RpcAddress, RpcCallContext, RpcConf, RpcEndpoint, RpcEndpointRef, RpcEnv, RpcEnvServerConfig, RpcTimeout}
 import java.time.Instant
 
+import com.github.ant.cluster.SERVER_STATUS._
 import com.github.ant.internal.Utils._
 import com.github.ant.utils.ParameterTool
 
@@ -53,13 +51,15 @@ class MasterEndpoint(antConf: AntConfig, override val rpcEnv: RpcEnv) extends Rp
   private val workerAddress = new ConcurrentHashMap[String, RpcEndpointRef]()
   private val workerLastHeartbeat = new ConcurrentHashMap[String, Long]()
   private val version = 0
-  private val db = DatabaseProvider.build(antConf)
+  private val db = DatabaseProvider(antConf)
+  private var serverStatus: SERVER_STATUS = UNKNOWN
 //  private var zkService:ZkServiceEndpoint = _
 
   override def onStart(): Unit = {
 //    zkService = ZkServiceEndpoint(s"${rpcEnv.address.hostPort}", antConf.toCuratorConfig)
 //    if (zkService.getActiveOrStandByFlag) activeMaster = true
     running = true
+    serverStatus = WAIT_SCHEDULE
     // 去zk创建临时znode,
     //    创建成功,则表示当前节点是activeMaster, 并创建版本id(持久节点,当master切换时,检查版本id并自增,防止脑裂)
     //    创建失败,当前节点是standBy,监听active Master的临时节点
@@ -174,14 +174,15 @@ class MasterEndpoint(antConf: AntConfig, override val rpcEnv: RpcEnv) extends Rp
 
     /**
      * 1、获取所有worker节点信息
-     * 2、通知所有worker节点自己是朱节点，改变上报的心跳信息地址
+     * 2、通知所有worker节点自己是主节点，改变上报的心跳信息地址
      * 3、收集主备节点切换时间内未执行成功的任务（未执行的任务暂存在worker节点中）
      * 4、
      */
-
+      serverStatus = RUNNING
       workerAddress.asScala.foreach(t => {
         t._2.askWithRetry[StatusMsg](ChangeMaster(rpcEnv.address.host, rpcEnv.address.port)) match {
-          case Success() => workerLastHeartbeat.put(t._1, Instant.now().toEpochMilli)
+          case Success() =>
+            workerLastHeartbeat.put(t._1, Instant.now().toEpochMilli)
           case _ =>
             log.error(s"${t._1} (worker) maybe dead!")
             workerLastHeartbeat.remove(t._1)
@@ -192,7 +193,7 @@ class MasterEndpoint(antConf: AntConfig, override val rpcEnv: RpcEnv) extends Rp
 
 
     case BecameStandBy() =>
-
+      serverStatus = RUNNING
     /**
      * 1、验证自己是否已经是standby节点
      * 2、同步主节点任务信息

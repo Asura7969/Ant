@@ -1,6 +1,5 @@
 package com.github.ant.rpc
 
-import com.github.ant.rpc.{RpcAddress, RpcConf, RpcEndpoint, RpcEndpointAddress, RpcEndpointRef}
 import com.github.ant.util.RpcUtils
 
 import scala.concurrent.Future
