@@ -1,8 +1,10 @@
 package com.github.ant.cluster.worker
 
+import java.util.{Timer, TimerTask}
+
 import com.github.ant.{AntConfig, DynamicParameters, GlobalConfig}
 import com.github.ant.DynamicParameters._
-import com.github.ant.cluster.master.{AssignTaskInfo, ChangeMaster, DeleteJob, Fail, GetTask, RegisterWorker, ResponseMsg, Success}
+import com.github.ant.cluster.master.{AssignTaskInfo, ChangeMaster, DeleteJob, Fail, GetTask, Heartbeat, RegisterWorker, ResponseMsg, Success}
 import com.github.ant.internal.Utils._
 import com.github.ant.internal.{Logging, Utils}
 import com.github.ant.network.protocol.message.TaskInfo
@@ -53,6 +55,8 @@ class WorkerEndpoint(antConf: AntConfig,
       RpcAddress.fromAntURL(masterUrl), s"$host:$port")
   }
 
+  var timer: Timer = _
+
   override def onStart(): Unit = {
     // start 之后向master注册本节点信息
     val host = rpcEnv.address.host
@@ -66,8 +70,18 @@ class WorkerEndpoint(antConf: AntConfig,
         return
     }
 
-    // todo: 开启心跳线程，定时向 master 上报心跳信息
+    // 开启心跳线程，定时向 master 上报心跳信息
+    startHeartbeat()
 
+  }
+
+  def startHeartbeat(): Unit = {
+    timer = new Timer(s"${rpcEnv.address.toAntURL}-Heartbeat",true)
+    timer.scheduleAtFixedRate(new TimerTask {
+      override def run(): Unit = {
+        master.askWithRetry(Heartbeat(rpcEnv.address.host, rpcEnv.address.port))
+      }
+    }, 0, 5000)
   }
 
   override def receiveAndReply(context: RpcCallContext): PartialFunction[Any, Unit] = {
@@ -108,8 +122,6 @@ class WorkerEndpoint(antConf: AntConfig,
         RpcAddress(address, port), "master-service")
       ctx.reply(Success())
   }
-
-
 }
 
 object WorkerEndpoint {

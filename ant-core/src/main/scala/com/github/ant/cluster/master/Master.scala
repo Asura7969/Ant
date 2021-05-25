@@ -14,6 +14,7 @@ import java.time.Instant
 
 import com.github.ant.cluster.SERVER_STATUS._
 import com.github.ant.internal.Utils._
+import com.github.ant.mybatis.model.TaskRuntime
 import com.github.ant.utils.ParameterTool
 
 import scala.collection.JavaConverters._
@@ -85,7 +86,28 @@ class MasterEndpoint(antConf: AntConfig, override val rpcEnv: RpcEnv) extends Rp
     stop()
   }
 
-  def handleMsg(ctx: RpcCallContext): PartialFunction[Any, Unit] = {
+  private def reScheduleJobToActiveWorker(deadWorker: String): Unit = {
+    val addressAndJobsMap = db.groupByAddress()
+    val runtimes: List[TaskRuntime] = addressAndJobsMap(deadWorker)
+    if (runtimes.nonEmpty) {
+      val addJobMap = Map[String, List[TaskRuntime]]()
+      val activeWorker: Map[String, List[TaskRuntime]] = addressAndJobsMap.-(deadWorker)
+      while (addJobMap.values.size != runtimes.size) {
+        for ((address, list) <- activeWorker) {
+
+        }
+        for (elem <- runtimes) {
+
+        }
+      }
+
+    } else {
+      logInfo(s"$deadWorker has no task!")
+    }
+    logInfo("重新分配任务成功!")
+  }
+
+  private def handleMsg(ctx: RpcCallContext): PartialFunction[Any, Unit] = {
     case RegisterWorker(address, port) =>
       val registered = workerAddress.keys().asScala
         .exists(ipAndPort => ipAndPort.equals(s"$address:$port"))
@@ -111,8 +133,8 @@ class MasterEndpoint(antConf: AntConfig, override val rpcEnv: RpcEnv) extends Rp
         // 超时,剔除节点
         removeWorker(workerKey)
         workerAddress.get(workerKey).ask[StatusMsg](StopWorker)
-        // todo:获取该节点的job信息,重新分配到其他存活的worker节点
-
+        // 获取该节点的job信息,重新分配到其他存活的worker节点
+        reScheduleJobToActiveWorker(workerKey)
       } else {
         workerLastHeartbeat.put(workerKey, currentTime)
       }
